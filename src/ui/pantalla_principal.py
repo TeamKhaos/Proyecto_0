@@ -1,4 +1,5 @@
 import pygame
+from ui.config_scene import ConfigScene
 
 class PantallaPrincipalScene:
     def __init__(self, nombre_jugador):
@@ -19,7 +20,8 @@ class PantallaPrincipalScene:
                 if self.botones["iniciar"].collidepoint(event.pos):
                     print("Iniciar juego")
                 elif self.botones["config"].collidepoint(event.pos):
-                    print("Configuración (por hacer)")
+                    from engine.scene_manager import SceneManager
+                    SceneManager.cambiar_escena(ConfigScene(self.nombre))
                 elif self.botones["salir"].collidepoint(event.pos):
                     pygame.quit()
                     exit()
