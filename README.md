@@ -1,3 +1,7 @@
+# pip install pygame
+# Codigo de ejemplo en main
+---
+
     juego_naves/
     │
     ├── assets/
