@@ -1,0 +1,47 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions (not a common case, but just in case)
+*.so
+
+# Distribution / packaging
+.Python
+build/
+dist/
+eggs/
+lib64/
+lib/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.whl
+MANIFEST.in
+
+# Environments
+.env
+env/
+venv/
+ENV/
+.venv/
+virtualenv/
+__pypackages__/
+node_modules
+
+# IDE-specific files
+.idea/
+.project
+.classpath
+.c9/
+.cache
+.settings/
+.tmp
+.DS_Store
+__pycache__/
+*.lib
+*.tag
+.history
