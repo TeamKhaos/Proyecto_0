@@ -21,4 +21,3 @@ while True:
     SceneManager.dibujar(pantalla)
     pygame.display.flip()
     clock.tick(60)
->>>>>>> origin/Hk-Pantalla_Principal
