@@ -1,16 +1,17 @@
-# assets/colors.py
-
-# Fondo y base
-BLACK = (0, 0, 0)
-DARK_GRAY = (26, 26, 26)
-LIGHT_GRAY = (211, 211, 211)
-
-# Colores principales
-WHITE = (255, 255, 255)
-NEON_GREEN = (0, 255, 0)
-BRIGHT_BLUE = (30, 144, 255)
-NEON_RED = (255, 99, 71)
-
-# Colores secundarios
-YELLOW = (255, 255, 0)
-ORANGE = (255, 165, 0)
+# Paleta inspirada en la NES
+NES_BLACK = (0, 0, 0)
+NES_WHITE = (255, 255, 255)
+NES_GRAY_DARK = (85, 85, 85)
+NES_GRAY_LIGHT = (170, 170, 170)
+NES_RED = (255, 0, 0)
+NES_GREEN = (0, 255, 0)
+NES_BLUE = (0, 0, 255)
+NES_YELLOW = (255, 255, 0)
+NES_ORANGE = (255, 165, 0)
+NES_CYAN = (0, 255, 255)
+NES_MAGENTA = (255, 0, 255)
+NES_BROWN = (139, 69, 19)
+NES_LIGHT_BLUE = (102, 178, 255)
+NES_LIGHT_GREEN = (144, 238, 144)
+NES_PINK = (255, 182, 193)
+NES_LIGHT_GRAY_BLUE = (200, 220, 255)

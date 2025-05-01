@@ -1,20 +1,20 @@
 import pygame
 from ui.pantalla_principal import PantallaPrincipalScene
-from assets.colors import *
+from assets.colors import * # Asegúrate de tener la paleta NES definida aquí
 
 class NombreJugadorScene:
     def __init__(self):
         # Carga la fuente personalizada desde assets/fonts
         self.font = pygame.font.Font("assets/fonts/upheavtt.ttf", 48)
         self.titulo_font = pygame.font.Font("assets/fonts/upheavtt.ttf", 60)
-        
+
         self.input_text = ""
         self.boton_rect = pygame.Rect(0, 0, 200, 50)  # Botón para confirmar
-        self.boton_color = NEON_RED  # Color del botón
+        self.boton_color = NES_RED  # Color del botón (Rojo NES)
 
         # Calcular las posiciones centradas
-        self.ancho_pantalla = 600  # Suponiendo que el tamaño de la ventana es 600x400
-        self.alto_pantalla = 400
+        self.ancho_pantalla = 800  # Suponiendo que el tamaño de la ventana es 600x400
+        self.alto_pantalla = 600
         self.centro_x = self.ancho_pantalla // 2
         self.centro_y = self.alto_pantalla // 2
 
@@ -36,32 +36,32 @@ class NombreJugadorScene:
         pass
 
     def dibujar(self, pantalla):
-        # Fondo suave
-        pantalla.fill(DARK_GRAY)  # Fondo oscuro pero suave
+        # Fondo oscuro clásico
+        pantalla.fill(NES_BLACK)
 
-        # Título
-        titulo = self.titulo_font.render("Bienvenido al Juego!", True, WHITE)
-        titulo_rect = titulo.get_rect(center=(self.centro_x, 80))  # Centrado en la parte superior
+        # Título en un color brillante
+        titulo = self.titulo_font.render("Bienvenido al Juego!", True, NES_YELLOW)
+        titulo_rect = titulo.get_rect(center=(self.centro_x, 80))
         pantalla.blit(titulo, titulo_rect)
 
-        # Texto de entrada
-        texto = self.font.render("Ingresa tu nombre:", True, WHITE)
-        texto_rect = texto.get_rect(center=(self.centro_x, self.centro_y - 40))  # Centrado verticalmente
+        # Texto de entrada en blanco o un gris claro
+        texto = self.font.render("Ingresa tu nombre:", True, NES_WHITE)
+        texto_rect = texto.get_rect(center=(self.centro_x, self.centro_y - 40))
         pantalla.blit(texto, texto_rect)
 
-        # Campo de texto (cuadro de entrada)
-        pygame.draw.rect(pantalla, (100, 100, 100), pygame.Rect(self.centro_x - 200, self.centro_y, 400, 50), 2)  # Borde gris claro
-        entrada = self.font.render(self.input_text, True, NEON_GREEN) # Texto en verde
-        entrada_rect = entrada.get_rect(center=(self.centro_x, self.centro_y + 25))  # Centrado dentro de la caja
+        # Campo de texto (cuadro de entrada) con borde y texto en otro color
+        pygame.draw.rect(pantalla, NES_GRAY_LIGHT, pygame.Rect(self.centro_x - 200, self.centro_y, 400, 50), 2) # Borde gris claro
+        entrada = self.font.render(self.input_text, True, NES_GREEN) # Texto en verde NES
+        entrada_rect = entrada.get_rect(center=(self.centro_x, self.centro_y + 25))
         pantalla.blit(entrada, entrada_rect)
 
-        # Botón de confirmar
-        self.boton_rect.center = (self.centro_x, self.centro_y + 100)  # Centrado debajo de la caja de texto
+        # Botón de confirmar en un color llamativo
+        self.boton_rect.center = (self.centro_x, self.centro_y + 100)
         pygame.draw.rect(pantalla, self.boton_color, self.boton_rect)
-        boton_texto = self.font.render("Confirmar", True, BRIGHT_BLUE)
+        boton_texto = self.font.render("Confirmar", True, NES_BLUE) # Texto del botón en azul NES
         boton_texto_rect = boton_texto.get_rect(center=self.boton_rect.center)
         pantalla.blit(boton_texto, boton_texto_rect)
 
-        # Efecto al pasar el mouse sobre el botón
+        # Efecto al pasar el mouse sobre el botón (un tono más claro del color del botón)
         if self.boton_rect.collidepoint(pygame.mouse.get_pos()):
-            pygame.draw.rect(pantalla, (70, 120, 200), self.boton_rect, 5)  # Resalta el borde
+            pygame.draw.rect(pantalla, (255, 100, 100), self.boton_rect, 5) # Resalta el borde en un rojo ligeramente más claro
