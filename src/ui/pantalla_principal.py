@@ -32,7 +32,7 @@ class PantallaPrincipalScene:
         for i, rect in enumerate(self.botones.values()):
             rect.center = (self.centro_x, inicio_y + i * (self.boton_alto + self.espacio_entre_botones))
 
-    def manejar_eventos(self, eventos):
+    def manejar_eventos(self, eventos, pantalla = None):
         for event in eventos:
             if event.type == pygame.QUIT:
                 pygame.quit()

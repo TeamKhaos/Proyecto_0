@@ -16,7 +16,7 @@ SceneManager.cambiar_escena(SplashScene())
 
 while True:
     eventos = pygame.event.get()
-    SceneManager.manejar_eventos(eventos)
+    SceneManager.manejar_eventos(eventos, pantalla)  # Pasa pantalla aquí
     SceneManager.actualizar()
     SceneManager.dibujar(pantalla)
     pygame.display.flip()

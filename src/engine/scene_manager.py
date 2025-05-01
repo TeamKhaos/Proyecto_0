@@ -8,9 +8,9 @@ class SceneManager:
         cls.escena_actual = nueva_escena
 
     @classmethod
-    def manejar_eventos(cls, eventos):
+    def manejar_eventos(cls, eventos, pantalla):
         if cls.escena_actual:
-            cls.escena_actual.manejar_eventos(eventos)
+            cls.escena_actual.manejar_eventos(eventos, pantalla)
 
     @classmethod
     def actualizar(cls):

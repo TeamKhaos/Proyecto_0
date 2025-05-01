@@ -14,17 +14,21 @@ class SplashScene:
         self.duracion = 3000  # 3 segundos
 
         self.font = pygame.font.Font("assets/fonts/upheavtt.ttf", 24)
-        self.texto = self.font.render("Powered by PYGAME", True, NES_RED)
+        self.texto = self.font.render("Powered by PYGAME", True, NES_GREEN)
         
         # Sonido breve al iniciar
         #self.sonido_intro = pygame.mixer.Sound("assets/sounds/intro.wav")
         #self.sonido_intro.play()
 
-    def manejar_eventos(self, eventos):
+    def manejar_eventos(self, eventos, patanalla = None):
         for evento in eventos:
             if evento.type == pygame.QUIT:
                 pygame.quit()
                 exit()
+            elif evento.type == pygame.KEYDOWN or evento.type == pygame.MOUSEBUTTONDOWN:
+                from engine.scene_manager import SceneManager
+                SceneManager.cambiar_escena(NombreJugadorScene())
+
 
     def actualizar(self):
         tiempo_actual = pygame.time.get_ticks()
