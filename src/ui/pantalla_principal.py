@@ -83,7 +83,7 @@ class PantallaPrincipalScene:
             estrella.dibujar(pantalla)
 
         # Título con efecto de brillo (opcional)
-        titulo = self.titulo_font.render("Nave Retro", True, NES_YELLOW)
+        titulo = self.titulo_font.render("Star Rogue", True, NES_YELLOW)
         pantalla.blit(titulo, titulo.get_rect(center=(self.centro_x, 100)))
 
         # Saludo

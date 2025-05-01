@@ -5,9 +5,10 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from engine.scene_manager import SceneManager
 from ui.splash_scene import SplashScene
-from settings import crear_pantalla
+from settings import crear_pantalla, conf_ventana
 
 pygame.init()
+conf_ventana() 
 pantalla = crear_pantalla()
 clock = pygame.time.Clock()
 
