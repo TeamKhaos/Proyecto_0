@@ -4,14 +4,15 @@ import sys, os, pygame
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from engine.scene_manager import SceneManager
-from ui.main_menu import NombreJugadorScene
+from ui.splash_scene import SplashScene
 from settings import crear_pantalla
 
 pygame.init()
 pantalla = crear_pantalla()
 clock = pygame.time.Clock()
 
-SceneManager.cambiar_escena(NombreJugadorScene())
+SceneManager.cambiar_escena(SplashScene())
+
 
 while True:
     eventos = pygame.event.get()
