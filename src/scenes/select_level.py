@@ -176,6 +176,13 @@ def pantalla_select_level(pantalla):
         for boton in botones:
             boton.dibujar(pantalla, fuente, mouse_pos)
 
+        # Eventos
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                esperando = False
+                pygame.quit()
+                return
+          
 
         pygame.display.flip()
         reloj.tick(60)
