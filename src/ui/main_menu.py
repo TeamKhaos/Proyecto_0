@@ -1,10 +1,22 @@
 import pygame
 from ui.pantalla_principal import PantallaPrincipalScene
+from assets.colors import *
 
 class NombreJugadorScene:
     def __init__(self):
-        self.font = pygame.font.SysFont(None, 48)
+        # Carga la fuente personalizada desde assets/fonts
+        self.font = pygame.font.Font("assets/fonts/upheavtt.ttf", 48)
+        self.titulo_font = pygame.font.Font("assets/fonts/upheavtt.ttf", 60)
+        
         self.input_text = ""
+        self.boton_rect = pygame.Rect(0, 0, 200, 50)  # Botón para confirmar
+        self.boton_color = NEON_RED  # Color del botón
+
+        # Calcular las posiciones centradas
+        self.ancho_pantalla = 600  # Suponiendo que el tamaño de la ventana es 600x400
+        self.alto_pantalla = 400
+        self.centro_x = self.ancho_pantalla // 2
+        self.centro_y = self.alto_pantalla // 2
 
     def manejar_eventos(self, eventos):
         for event in eventos:
@@ -24,8 +36,32 @@ class NombreJugadorScene:
         pass
 
     def dibujar(self, pantalla):
-        pantalla.fill((0, 0, 0))
-        texto = self.font.render("Ingresa tu nombre:", True, (255, 255, 255))
-        entrada = self.font.render(self.input_text, True, (0, 255, 0))
-        pantalla.blit(texto, (100, 100))
-        pantalla.blit(entrada, (100, 160))
+        # Fondo suave
+        pantalla.fill(DARK_GRAY)  # Fondo oscuro pero suave
+
+        # Título
+        titulo = self.titulo_font.render("Bienvenido al Juego!", True, WHITE)
+        titulo_rect = titulo.get_rect(center=(self.centro_x, 80))  # Centrado en la parte superior
+        pantalla.blit(titulo, titulo_rect)
+
+        # Texto de entrada
+        texto = self.font.render("Ingresa tu nombre:", True, WHITE)
+        texto_rect = texto.get_rect(center=(self.centro_x, self.centro_y - 40))  # Centrado verticalmente
+        pantalla.blit(texto, texto_rect)
+
+        # Campo de texto (cuadro de entrada)
+        pygame.draw.rect(pantalla, (100, 100, 100), pygame.Rect(self.centro_x - 200, self.centro_y, 400, 50), 2)  # Borde gris claro
+        entrada = self.font.render(self.input_text, True, NEON_GREEN) # Texto en verde
+        entrada_rect = entrada.get_rect(center=(self.centro_x, self.centro_y + 25))  # Centrado dentro de la caja
+        pantalla.blit(entrada, entrada_rect)
+
+        # Botón de confirmar
+        self.boton_rect.center = (self.centro_x, self.centro_y + 100)  # Centrado debajo de la caja de texto
+        pygame.draw.rect(pantalla, self.boton_color, self.boton_rect)
+        boton_texto = self.font.render("Confirmar", True, BRIGHT_BLUE)
+        boton_texto_rect = boton_texto.get_rect(center=self.boton_rect.center)
+        pantalla.blit(boton_texto, boton_texto_rect)
+
+        # Efecto al pasar el mouse sobre el botón
+        if self.boton_rect.collidepoint(pygame.mouse.get_pos()):
+            pygame.draw.rect(pantalla, (70, 120, 200), self.boton_rect, 5)  # Resalta el borde
