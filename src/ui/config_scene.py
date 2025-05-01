@@ -10,21 +10,32 @@ class ConfigScene:
         self.titulo_font = pygame.font.Font("assets/fonts/upheavtt.ttf", 60)
         self.titulo = self.titulo_font.render("Configuración", True, NES_YELLOW)
 
-        # Estado actual
         self.fullscreen = FULLSCREEN
         self.volumen = 0.5
 
-        # Controles - Centrados y con más espacio
-        self.boton_ancho = 300
+        self.boton_ancho = 530
         self.boton_alto = 60
-        self.espacio_vertical = 80
         self.x_boton = WIDTH // 2 - self.boton_ancho // 2
-        self.y_inicial = 180
 
-        self.boton_fullscreen_rect = pygame.Rect(self.x_boton, self.y_inicial, self.boton_ancho, self.boton_alto)
-        self.boton_volumen_mas_rect = pygame.Rect(self.x_boton + self.boton_ancho - 60, self.y_inicial + self.espacio_vertical, 50, 50)
-        self.boton_volumen_menos_rect = pygame.Rect(self.x_boton, self.y_inicial + self.espacio_vertical, 50, 50)
-        self.boton_volver_rect = pygame.Rect(self.x_boton, self.y_inicial + 2 * self.espacio_vertical, self.boton_ancho, self.boton_alto)
+        # Nuevas posiciones
+        self.y_fs = 150
+        self.y_vol = 270
+        self.y_barra = self.y_vol + 50
+        self.y_volumen_botones = self.y_barra + 30
+        self.y_volver = self.y_volumen_botones + 100
+
+        self.boton_fullscreen_rect = pygame.Rect(self.x_boton, self.y_fs, self.boton_ancho, self.boton_alto)
+
+        # Volumen - botones y barra
+        self.boton_volumen_menos_rect = pygame.Rect(self.x_boton, self.y_volumen_botones, 50, 50)
+        self.boton_volumen_mas_rect = pygame.Rect(self.x_boton + self.boton_ancho - 50, self.y_volumen_botones, 50, 50)
+
+        self.barra_x = self.boton_volumen_menos_rect.right + 10
+        self.barra_ancho = self.boton_volumen_mas_rect.left - self.barra_x - 10
+        self.barra_y = self.y_volumen_botones + 20
+        self.barra_alto = 10
+
+        self.boton_volver_rect = pygame.Rect(self.x_boton, self.y_volver, self.boton_ancho, self.boton_alto)
 
         self.boton_color_normal = NES_BLUE
         self.boton_color_hover = NES_LIGHT_BLUE
@@ -56,47 +67,47 @@ class ConfigScene:
 
     def dibujar(self, pantalla):
         pantalla.fill(NES_BLACK)
-        pantalla.blit(self.titulo, (WIDTH // 2 - self.titulo.get_width() // 2, 80)) # Centrar título
 
-        # Botón Pantalla Completa
-        color_fs = self.boton_color_normal
-        if self.boton_fullscreen_rect.collidepoint(pygame.mouse.get_pos()):
-            color_fs = self.boton_color_hover
-            pygame.draw.rect(pantalla, NES_WHITE, self.boton_fullscreen_rect, 3)
-        pygame.draw.rect(pantalla, color_fs, self.boton_fullscreen_rect, border_radius=8)
+        # Título
+        pantalla.blit(self.titulo, (WIDTH // 2 - self.titulo.get_width() // 2, 60))
+
+        mouse_pos = pygame.mouse.get_pos()
+
+        # --- Pantalla completa ---
+        pygame.draw.rect(pantalla, self.boton_color_hover if self.boton_fullscreen_rect.collidepoint(mouse_pos) else self.boton_color_normal,
+                        self.boton_fullscreen_rect, border_radius=10)
+        pygame.draw.rect(pantalla, NES_WHITE, self.boton_fullscreen_rect, 2, border_radius=10)
+
         texto_fs = self.font.render("Pantalla completa:", True, self.texto_color)
-        estado_fs = self.font.render("ON" if self.fullscreen else "OFF", True, self.accent_color)
-        pantalla.blit(texto_fs, (self.boton_fullscreen_rect.x + 20, self.boton_fullscreen_rect.y + 15))
-        pantalla.blit(estado_fs, (self.boton_fullscreen_rect.right - estado_fs.get_width() - 20, self.boton_fullscreen_rect.y + 15))
+        estado_fs = self.font.render("ON" if self.fullscreen else "OFF", True, NES_GREEN if self.fullscreen else NES_RED)
+        pantalla.blit(texto_fs, (self.boton_fullscreen_rect.x + 20, self.boton_fullscreen_rect.y + 12))
+        pantalla.blit(estado_fs, (self.boton_fullscreen_rect.right - estado_fs.get_width() - 20, self.boton_fullscreen_rect.y + 12))
 
-        # Control de Volumen
-        vol_label = self.font.render("Volumen:", True, self.texto_color)
-        vol_value = self.font.render(f"{int(self.volumen * 100)}%", True, self.accent_color)
-        pantalla.blit(vol_label, (self.x_boton + 20, self.boton_volumen_menos_rect.y + 10))
-        pantalla.blit(vol_value, (self.boton_volumen_mas_rect.x + 60, self.boton_volumen_menos_rect.y + 10))
+        # --- Volumen ---
+        vol_label = self.font.render(f"Volumen: {int(self.volumen * 100)}%", True, self.texto_color)
+        pantalla.blit(vol_label, (WIDTH // 2 - vol_label.get_width() // 2, self.y_vol))
 
-        # Botón Menos Volumen
-        color_menos = self.boton_color_normal
-        if self.boton_volumen_menos_rect.collidepoint(pygame.mouse.get_pos()):
-            color_menos = self.boton_color_hover
-            pygame.draw.rect(pantalla, NES_WHITE, self.boton_volumen_menos_rect, 3)
-        pygame.draw.rect(pantalla, color_menos, self.boton_volumen_menos_rect, border_radius=8)
-        pantalla.blit(self.font.render("-", True, self.texto_color), (self.boton_volumen_menos_rect.x + 15, self.boton_volumen_menos_rect.y + 10))
+        # Botón -
+        pygame.draw.rect(pantalla, self.boton_color_hover if self.boton_volumen_menos_rect.collidepoint(mouse_pos) else self.boton_color_normal,
+                        self.boton_volumen_menos_rect, border_radius=8)
+        pygame.draw.rect(pantalla, NES_WHITE, self.boton_volumen_menos_rect, 2, border_radius=8)
+        pantalla.blit(self.font.render("-", True, self.texto_color), (self.boton_volumen_menos_rect.x + 15, self.boton_volumen_menos_rect.y + 5))
 
-        # Botón Más Volumen
-        color_mas = self.boton_color_normal
-        if self.boton_volumen_mas_rect.collidepoint(pygame.mouse.get_pos()):
-            color_mas = self.boton_color_hover
-            pygame.draw.rect(pantalla, NES_WHITE, self.boton_volumen_mas_rect, 3)
-        pygame.draw.rect(pantalla, color_mas, self.boton_volumen_mas_rect, border_radius=8)
-        pantalla.blit(self.font.render("+", True, self.texto_color), (self.boton_volumen_mas_rect.x + 15, self.boton_volumen_mas_rect.y + 10))
+        # Botón +
+        pygame.draw.rect(pantalla, self.boton_color_hover if self.boton_volumen_mas_rect.collidepoint(mouse_pos) else self.boton_color_normal,
+                        self.boton_volumen_mas_rect, border_radius=8)
+        pygame.draw.rect(pantalla, NES_WHITE, self.boton_volumen_mas_rect, 2, border_radius=8)
+        pantalla.blit(self.font.render("+", True, self.texto_color), (self.boton_volumen_mas_rect.x + 15, self.boton_volumen_mas_rect.y + 5))
 
-        # Botón Volver
-        color_volver = self.boton_color_normal
-        if self.boton_volver_rect.collidepoint(pygame.mouse.get_pos()):
-            color_volver = self.boton_color_hover
-            pygame.draw.rect(pantalla, NES_WHITE, self.boton_volver_rect, 3)
-        pygame.draw.rect(pantalla, color_volver, self.boton_volver_rect, border_radius=8)
-        volver_label = self.font.render("Volver", True, self.texto_color)
+        # Barra de volumen
+        pygame.draw.rect(pantalla, NES_GRAY_DARK, (self.barra_x, self.barra_y, self.barra_ancho, self.barra_alto), border_radius=5)
+        volumen_progreso = int(self.barra_ancho * self.volumen)
+        pygame.draw.rect(pantalla, NES_GREEN, (self.barra_x, self.barra_y, volumen_progreso, self.barra_alto), border_radius=5)
+
+        # --- Volver ---
+        pygame.draw.rect(pantalla, self.boton_color_hover if self.boton_volver_rect.collidepoint(mouse_pos) else self.boton_color_normal,
+                        self.boton_volver_rect, border_radius=10)
+        pygame.draw.rect(pantalla, NES_WHITE, self.boton_volver_rect, 2, border_radius=10)
+        volver_label = self.font.render("Volver", True, NES_WHITE)
         volver_rect = volver_label.get_rect(center=self.boton_volver_rect.center)
         pantalla.blit(volver_label, volver_rect)

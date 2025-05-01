@@ -1,19 +1,17 @@
 import pygame
 from ui.pantalla_principal import PantallaPrincipalScene
-from assets.colors import * # Asegúrate de tener la paleta NES definida aquí
+from assets.colors import *
 
 class NombreJugadorScene:
     def __init__(self):
-        # Carga la fuente personalizada desde assets/fonts
-        self.font = pygame.font.Font("assets/fonts/upheavtt.ttf", 48)
-        self.titulo_font = pygame.font.Font("assets/fonts/upheavtt.ttf", 60)
+        self.font = pygame.font.Font("assets/fonts/upheavtt.ttf", 36)
+        self.titulo_font = pygame.font.Font("assets/fonts/upheavtt.ttf", 64)
 
         self.input_text = ""
-        self.boton_rect = pygame.Rect(0, 0, 200, 50)  # Botón para confirmar
-        self.boton_color = NES_RED  # Color del botón (Rojo NES)
+        self.boton_rect = pygame.Rect(0, 0, 240, 60)
+        self.boton_color = NES_RED
 
-        # Calcular las posiciones centradas
-        self.ancho_pantalla = 800  # Suponiendo que el tamaño de la ventana es 600x400
+        self.ancho_pantalla = 800
         self.alto_pantalla = 600
         self.centro_x = self.ancho_pantalla // 2
         self.centro_y = self.alto_pantalla // 2
@@ -24,44 +22,54 @@ class NombreJugadorScene:
                 pygame.quit()
                 exit()
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN and self.input_text:
+                if event.key == pygame.K_RETURN and self.input_text.strip():
                     from engine.scene_manager import SceneManager
-                    SceneManager.cambiar_escena(PantallaPrincipalScene(self.input_text))
+                    SceneManager.cambiar_escena(PantallaPrincipalScene(self.input_text.strip()))
                 elif event.key == pygame.K_BACKSPACE:
                     self.input_text = self.input_text[:-1]
                 else:
-                    self.input_text += event.unicode
+                    if len(self.input_text) < 20:
+                        self.input_text += event.unicode
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:  # Clic izquierdo
+                    if self.boton_rect.collidepoint(event.pos) and self.input_text.strip():
+                        from engine.scene_manager import SceneManager
+                        SceneManager.cambiar_escena(PantallaPrincipalScene(self.input_text.strip()))
 
     def actualizar(self):
         pass
 
     def dibujar(self, pantalla):
-        # Fondo oscuro clásico
         pantalla.fill(NES_BLACK)
 
-        # Título en un color brillante
-        titulo = self.titulo_font.render("Bienvenido al Juego!", True, NES_YELLOW)
-        titulo_rect = titulo.get_rect(center=(self.centro_x, 80))
+        # ------------------ TÍTULO ------------------
+        titulo = self.titulo_font.render("¡Piloto, Identifícate!", True, NES_YELLOW)
+        titulo_rect = titulo.get_rect(center=(self.centro_x, 100))
         pantalla.blit(titulo, titulo_rect)
 
-        # Texto de entrada en blanco o un gris claro
-        texto = self.font.render("Ingresa tu nombre:", True, NES_WHITE)
-        texto_rect = texto.get_rect(center=(self.centro_x, self.centro_y - 40))
-        pantalla.blit(texto, texto_rect)
+        # ------------------ SUBTÍTULO ------------------
+        subtitulo = self.font.render("Ingresa tu nombre:", True, NES_WHITE)
+        subtitulo_rect = subtitulo.get_rect(center=(self.centro_x, self.centro_y - 60))
+        pantalla.blit(subtitulo, subtitulo_rect)
 
-        # Campo de texto (cuadro de entrada) con borde y texto en otro color
-        pygame.draw.rect(pantalla, NES_GRAY_LIGHT, pygame.Rect(self.centro_x - 200, self.centro_y, 400, 50), 2) # Borde gris claro
-        entrada = self.font.render(self.input_text, True, NES_GREEN) # Texto en verde NES
-        entrada_rect = entrada.get_rect(center=(self.centro_x, self.centro_y + 25))
+        # ------------------ CAMPO DE TEXTO ------------------
+        input_box = pygame.Rect(self.centro_x - 200, self.centro_y - 10, 400, 50)
+        pygame.draw.rect(pantalla, NES_GRAY_LIGHT, input_box, border_radius=10)
+        pygame.draw.rect(pantalla, NES_LIGHT_BLUE, input_box, 3, border_radius=10)
+
+        entrada = self.font.render(self.input_text, True, NES_GREEN)
+        entrada_rect = entrada.get_rect(midleft=(input_box.x + 10, input_box.centery))
         pantalla.blit(entrada, entrada_rect)
 
-        # Botón de confirmar en un color llamativo
-        self.boton_rect.center = (self.centro_x, self.centro_y + 100)
-        pygame.draw.rect(pantalla, self.boton_color, self.boton_rect)
-        boton_texto = self.font.render("Confirmar", True, NES_BLUE) # Texto del botón en azul NES
+        # ------------------ BOTÓN ------------------
+        self.boton_rect.center = (self.centro_x, self.centro_y + 80)
+        mouse_pos = pygame.mouse.get_pos()
+
+        # Hover
+        color_borde = NES_ORANGE if self.boton_rect.collidepoint(mouse_pos) else NES_RED
+        pygame.draw.rect(pantalla, self.boton_color, self.boton_rect, border_radius=10)
+        pygame.draw.rect(pantalla, color_borde, self.boton_rect, 4, border_radius=10)
+
+        boton_texto = self.font.render("Confirmar", True, NES_WHITE)
         boton_texto_rect = boton_texto.get_rect(center=self.boton_rect.center)
         pantalla.blit(boton_texto, boton_texto_rect)
-
-        # Efecto al pasar el mouse sobre el botón (un tono más claro del color del botón)
-        if self.boton_rect.collidepoint(pygame.mouse.get_pos()):
-            pygame.draw.rect(pantalla, (255, 100, 100), self.boton_rect, 5) # Resalta el borde en un rojo ligeramente más claro

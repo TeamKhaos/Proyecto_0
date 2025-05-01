@@ -5,39 +5,41 @@ from assets.colors import *
 class PantallaPrincipalScene:
     def __init__(self, nombre_jugador):
         self.nombre = nombre_jugador
-        self.font = pygame.font.Font("assets/fonts/upheavtt.ttf", 48)
+        self.font = pygame.font.Font("assets/fonts/upheavtt.ttf", 36)
         self.titulo_font = pygame.font.Font("assets/fonts/upheavtt.ttf", 72)
+
         self.ancho_pantalla = 800
         self.alto_pantalla = 600
         self.centro_x = self.ancho_pantalla // 2
-        self.centro_y = self.alto_pantalla // 2
-        self.boton_ancho = 280
-        self.boton_alto = 70
-        self.espacio_vertical_titulo = 120 # Más espacio entre título y saludo
-        self.espacio_vertical_botones = 90 # Aún más espacio entre botones
-        self.boton_color_normal = NES_BLUE
-        self.boton_color_hover = NES_LIGHT_BLUE
-        self.boton_texto_color = NES_WHITE
 
-        # Calcular la posición vertical del primer botón
-        self.primer_boton_y = self.centro_y + 30 # Mover los botones un poco hacia abajo
+        self.boton_ancho = 320
+        self.boton_alto = 60
+        self.espacio_entre_botones = 30
 
         self.botones = {
-            "iniciar": pygame.Rect(self.centro_x - self.boton_ancho // 2, self.primer_boton_y - self.espacio_vertical_botones, self.boton_ancho, self.boton_alto),
-            "configuración": pygame.Rect(self.centro_x - self.boton_ancho // 2, self.primer_boton_y, self.boton_ancho, self.boton_alto),
-            "salir": pygame.Rect(self.centro_x - self.boton_ancho // 2, self.primer_boton_y + self.espacio_vertical_botones, self.boton_ancho, self.boton_alto),
+            "iniciar": pygame.Rect(0, 0, self.boton_ancho, self.boton_alto),
+            "configuración": pygame.Rect(0, 0, self.boton_ancho, self.boton_alto),
+            "salir": pygame.Rect(0, 0, self.boton_ancho, self.boton_alto),
         }
 
+        self._posicionar_botones()
+
+    def _posicionar_botones(self):
+        # Posiciona los botones centrados verticalmente
+        total_altura = len(self.botones) * self.boton_alto + (len(self.botones) - 1) * self.espacio_entre_botones
+        inicio_y = (self.alto_pantalla // 2 + 50) - total_altura // 2
+
+        for i, rect in enumerate(self.botones.values()):
+            rect.center = (self.centro_x, inicio_y + i * (self.boton_alto + self.espacio_entre_botones))
+
     def manejar_eventos(self, eventos):
-        mouse_pos = pygame.mouse.get_pos()
         for event in eventos:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if self.botones["iniciar"].collidepoint(event.pos):
-                    print("Iniciar juego")
-                    # Aquí iría la lógica para iniciar el juego
+                    print("Iniciar juego")  # Aquí puedes cambiar a la escena del juego
                 elif self.botones["configuración"].collidepoint(event.pos):
                     from engine.scene_manager import SceneManager
                     SceneManager.cambiar_escena(ConfigScene(self.nombre))
@@ -49,26 +51,25 @@ class PantallaPrincipalScene:
         pass
 
     def dibujar(self, pantalla):
-        pantalla.fill(NES_BLACK)
+        pantalla.fill(NES_GRAY_DARK)
 
-        # Título centrado en la parte superior
+        # Título
         titulo = self.titulo_font.render("Nave Retro", True, NES_YELLOW)
-        titulo_rect = titulo.get_rect(center=(self.centro_x, 100))
-        pantalla.blit(titulo, titulo_rect)
+        pantalla.blit(titulo, titulo.get_rect(center=(self.centro_x, 100)))
 
-        # Saludo al jugador centrado debajo del título con más espacio
+        # Saludo
         saludo = self.font.render(f"¡Hola, {self.nombre}!", True, NES_LIGHT_GREEN)
-        saludo_rect = saludo.get_rect(center=(self.centro_x, 100 + self.espacio_vertical_titulo))
-        pantalla.blit(saludo, saludo_rect)
+        pantalla.blit(saludo, saludo.get_rect(center=(self.centro_x, 180)))
 
-        # Dibujar los botones con más espacio entre ellos
+        # Botones
+        mouse_pos = pygame.mouse.get_pos()
         for texto, rect in self.botones.items():
-            color_boton = self.boton_color_normal
-            if rect.collidepoint(pygame.mouse.get_pos()):
-                color_boton = self.boton_color_hover
-                pygame.draw.rect(pantalla, NES_WHITE, rect, 3)
+            esta_sobre = rect.collidepoint(mouse_pos)
+            color_boton = NES_BLUE if not esta_sobre else NES_LIGHT_BLUE
 
-            pygame.draw.rect(pantalla, color_boton, rect, border_radius=8)
-            label = self.font.render(texto.capitalize(), True, self.boton_texto_color)
-            label_rect = label.get_rect(center=rect.center)
-            pantalla.blit(label, label_rect)
+            pygame.draw.rect(pantalla, color_boton, rect, border_radius=10)
+            if esta_sobre:
+                pygame.draw.rect(pantalla, NES_WHITE, rect, width=3, border_radius=10)
+
+            label = self.font.render(texto.capitalize(), True, NES_WHITE)
+            pantalla.blit(label, label.get_rect(center=rect.center))
