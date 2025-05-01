@@ -42,7 +42,7 @@ class ConfigScene:
         self.texto_color = NES_WHITE
         self.accent_color = NES_YELLOW
 
-    def manejar_eventos(self, eventos):
+    def manejar_eventos(self, eventos, pantalla = None):
         for evento in eventos:
             if evento.type == pygame.QUIT:
                 pygame.quit()
