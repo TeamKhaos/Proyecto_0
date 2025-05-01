@@ -16,6 +16,8 @@ class NombreJugadorScene:
             self.centro_x = self.ancho_pantalla // 2
             self.centro_y = self.alto_pantalla // 2
 
+            self.nombre_jugador = ""  # Variable para guardar el nombre
+
         def manejar_eventos(self, eventos, pantalla):
             for event in eventos:
                 if event.type == pygame.QUIT:
@@ -24,9 +26,10 @@ class NombreJugadorScene:
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN and self.input_text.strip():
                         # Pasar pantalla como parámetro
+                        self.nombre_jugador = self.input_text.strip()
                         self.transicion_fundido(pantalla)
                         from engine.scene_manager import SceneManager
-                        SceneManager.cambiar_escena(PantallaPrincipalScene(self.input_text.strip()))
+                        SceneManager.cambiar_escena(PantallaPrincipalScene(self.nombre_jugador))
                     elif event.key == pygame.K_BACKSPACE:
                         self.input_text = self.input_text[:-1]
                     else:
