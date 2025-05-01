@@ -1,6 +1,7 @@
 import pygame
 import random
 from ui.config_scene import ConfigScene
+from scenes.select_level import pantalla_select_level
 from assets.colors import *
 
 class Estrella:
@@ -60,7 +61,8 @@ class PantallaPrincipalScene:
                 exit()
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if self.botones["iniciar"].collidepoint(event.pos):
-                    print("Iniciar juego")
+                    from engine.scene_manager import SceneManager
+                    SceneManager.cambiar_escena(pantalla_select_level(pantalla))
                 elif self.botones["configuración"].collidepoint(event.pos):
                     from engine.scene_manager import SceneManager
                     SceneManager.cambiar_escena(ConfigScene(self.nombre))
