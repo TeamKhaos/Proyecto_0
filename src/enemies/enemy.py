@@ -5,14 +5,29 @@ class Enemy:
         self.x = x
         self.y = y
         self.velocidad = velocidad
+        
 
-        # Cargar sprite del enemigo
-        self.imagen = pygame.image.load("assets/images/enemy.png").convert_alpha()
-        self.ancho = self.imagen.get_width()
-        self.alto = self.imagen.get_height()
+        # Animación
+        self.frames = []
+        for i in range(4):
+            frame = pygame.image.load(f"assets/images/enemies/Enemy{i}.png").convert_alpha()
+            frame = pygame.transform.scale(frame, (64, 64))  # Ajusta el tamaño si quieres
+            self.frames.append(frame)
+
+        self.frame_actual = 0
+        self.tiempo_entre_frames = 5  # Mayor = más lento, menor = más rápido
+        self.contador_animacion = 0
 
     def mover(self):
         self.y += self.velocidad
 
+    def actualizar_animacion(self):
+        self.contador_animacion += 1
+        if self.contador_animacion >= self.tiempo_entre_frames:
+            self.frame_actual = (self.frame_actual + 1) % len(self.frames)
+            self.contador_animacion = 0
+
     def dibujar(self, pantalla):
-        pantalla.blit(self.imagen, (self.x, self.y))
+        self.actualizar_animacion()
+        imagen = self.frames[self.frame_actual]
+        pantalla.blit(imagen, (self.x, self.y))
