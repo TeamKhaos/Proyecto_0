@@ -1,6 +1,7 @@
 import pygame
 from assets.colors import *  # Asegúrate de tener los colores definidos en este archivo
-
+from enemies.enemy_manager import EnemyManager
+from enemies.boss import Boss
 class Nave:
     def __init__(self, x=None, y=None):
         self.x = x if x is not None else 400
@@ -8,6 +9,7 @@ class Nave:
         self.velocidad = 5
         self.ancho = 40
         self.alto = 30
+
 
     def mover(self, teclas):
         if teclas[pygame.K_w]:  # Arriba
@@ -39,6 +41,10 @@ class NivelUnoScene:
         self.boton_rect = pygame.Rect(0, 0, 240, 60)
         self.boton_color = NES_BLUE
 
+        self.enemy_manager = EnemyManager()
+        self.boss = Boss()
+        self.contador_frames = 0  
+
     def manejar_eventos(self, eventos, pantalla):
         for event in eventos:
             if event.type == pygame.QUIT:
@@ -61,6 +67,16 @@ class NivelUnoScene:
                         self.nave.x += 5
 
     def actualizar(self):
+
+        if not self.pausa:
+            self.contador_frames += 1
+            self.enemy_manager.actualizar()
+
+            if self.contador_frames == 1200:  # Por ejemplo, luego de 1200 frames
+                self.boss.aparecer()
+
+            self.boss.mover()
+
         pass
 
     def dibujar(self, pantalla):
@@ -76,6 +92,10 @@ class NivelUnoScene:
 
             # ------------------ NAVE ------------------
             self.nave.dibujar(pantalla)
+            # enemigos
+            self.enemy_manager.dibujar(pantalla)
+            self.boss.dibujar(pantalla)
+
     
     def dibujar_fondo_congelado(self, pantalla):
         pantalla.fill(NES_BLACK)
