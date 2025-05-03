@@ -1,13 +1,8 @@
 # src/scenes/select_level.py
 import pygame
 import random
-
-# Colores estilo NES
-NEGRO = (0, 0, 0)
-GRIS = (192, 192, 192)
-ROJO = (255, 0, 0)
-BLANCO = (255, 255, 255)
-AMARILLO = (255, 255, 0)
+from assets.colors import *
+from scenes.level_1 import NivelUnoScene
 ANCHO_PANTALLA = 800
 ALTO_PANTALLA = 600
 
@@ -15,13 +10,19 @@ class Boton:
     def __init__(self, texto, x, y, ancho, alto):
         self.rect = pygame.Rect(x, y, ancho, alto)
         self.texto = texto
-        self.color_normal = GRIS
-        self.color_hover = ROJO
-        self.color_texto = NEGRO
+        self.color_normal = NES_BLUE
+        self.color_hover = NES_LIGHT_BLUE
+        self.color_texto = NES_WHITE
+        self.borde_color = NES_BLUE
+        self.borde_ancho = 4
 
     def dibujar(self, pantalla, fuente, mouse_pos):
-        color = self.color_hover if self.rect.collidepoint(mouse_pos) else self.color_normal
-        pygame.draw.rect(pantalla, color, self.rect)
+        hover = self.rect.collidepoint(mouse_pos)
+        color_borde = self.color_hover if hover else self.borde_color
+
+        pygame.draw.rect(pantalla, self.color_normal, self.rect, border_radius=10)
+        pygame.draw.rect(pantalla, color_borde, self.rect, self.borde_ancho, border_radius=10)
+
         texto_render = fuente.render(self.texto, True, self.color_texto)
         texto_rect = texto_render.get_rect(center=self.rect.center)
         pantalla.blit(texto_render, texto_rect)
@@ -43,7 +44,7 @@ class Estrella:
             self.x = random.randint(0, ANCHO_PANTALLA)
 
     def dibujar(self, pantalla):
-        pygame.draw.circle(pantalla, BLANCO, (int(self.x), int(self.y)), self.tamano)
+        pygame.draw.circle(pantalla, NES_WHITE, (int(self.x), int(self.y)), self.tamano)
 
 class Nave:
     def __init__(self, x=None, y=None):
@@ -64,7 +65,7 @@ class Nave:
 
     def dibujar(self, pantalla):
         puntos = [(self.x, self.y), (self.x + 20, self.y + 10), (self.x, self.y + 20)]
-        pygame.draw.polygon(pantalla, ROJO, puntos)
+        pygame.draw.polygon(pantalla, NES_RED, puntos)
 
 class Disparo:
     def __init__(self, x, y):
@@ -79,7 +80,7 @@ class Disparo:
             self.activo = False
 
     def dibujar(self, pantalla):
-        pygame.draw.circle(pantalla, AMARILLO, (int(self.x), int(self.y)), 4)
+        pygame.draw.circle(pantalla, NES_YELLOW, (int(self.x), int(self.y)), 4)
 
 class Enemigo:
     def __init__(self, x, y):
@@ -91,98 +92,108 @@ class Enemigo:
     def dibujar(self, pantalla):
         if self.explotando:
             if self.contador_explosion < 45:
-                pygame.draw.circle(pantalla, ROJO, (int(self.x), int(self.y)), 15)
+                pygame.draw.circle(pantalla, NES_RED, (int(self.x), int(self.y)), 15)
             elif self.contador_explosion < 90:
-                pygame.draw.circle(pantalla, AMARILLO, (int(self.x), int(self.y)), 20)
+                pygame.draw.circle(pantalla, NES_YELLOW, (int(self.x), int(self.y)), 20)
             else:
-                return False  # ya terminó la animación
+                return False
             self.contador_explosion += 1
         else:
-            pygame.draw.rect(pantalla, GRIS, (self.x - 10, self.y - 10, 20, 20))
+            pygame.draw.rect(pantalla, NES_GRAY, (self.x - 10, self.y - 10, 20, 20))
         return True
 
     def impactado_por(self, disparo):
         distancia = ((self.x - disparo.x) ** 2 + (self.y - disparo.y) ** 2) ** 0.5
         return distancia < 20
 
-def pantalla_select_level(pantalla):
-    fuente = pygame.font.SysFont("Courier", 30, bold=True)
-    botones = [
-        Boton("Tutorial", 300, 200, 200, 50),
-        Boton("Nivel 1", 300, 270, 200, 50),
-        Boton("Nivel 2", 300, 340, 200, 50)
-    ]
+class SelectLevelScene:
+    def __init__(self, nombre):
+        self.nombre_jugador = nombre
+        self.fuente = pygame.font.Font("assets/fonts/upheavtt.ttf", 36)
 
-    estrellas = [Estrella() for _ in range(50)]
-    naves = []
-    reloj = pygame.time.Clock()
+        self.botones = [
+            Boton("Tutorial", 300, 200, 200, 50),
+            Boton("Nivel 1", 300, 270, 200, 50),
+            Boton("Nivel 2", 300, 340, 200, 50),
+            Boton("Volver", 300, 410, 200, 50)
+        ]
 
-    # Disparo automático
-    evento_disparo = 0
-    intervalo_disparo = random.randint(5000, 10000)
+        self.estrellas = [Estrella() for _ in range(50)]
+        self.naves = []
+        self.disparo = None
+        self.enemigo = None
+        self.nave_atacante = None
+        self.tiempo_disparo = pygame.time.get_ticks()
+        self.intervalo_disparo = random.randint(5000, 10000)
 
-    disparo = None
-    enemigo = None
-    nave_atacante = None
+    def manejar_eventos(self, eventos, pantalla):
+        from engine.scene_manager import SceneManager
+        from ui.pantalla_principal import PantallaPrincipalScene
 
-    esperando = True
-    while esperando:
-        pantalla.fill(NEGRO)
+        for evento in eventos:
+            if evento.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            for boton in self.botones:
+                if boton.esta_presionado(evento):
+                    if boton.texto == "Volver":
+                        SceneManager.cambiar_escena(PantallaPrincipalScene(self.nombre_jugador))
+                    elif boton.texto == "Nivel 1":
+                        SceneManager.cambiar_escena(NivelUnoScene(self.nombre_jugador))
+                    else:
+                        print(f"Ir a {boton.texto} (implementación pendiente)")
+
+    def actualizar(self):
         tiempo_actual = pygame.time.get_ticks()
 
-        for estrella in estrellas:
+        for estrella in self.estrellas:
             estrella.mover()
+
+        if self.disparo is None and tiempo_actual - self.tiempo_disparo > self.intervalo_disparo:
+            base_x, base_y = 100, ALTO_PANTALLA - 150
+            self.nave_atacante = Nave(x=base_x, y=base_y)
+            self.disparo = Disparo(base_x + 10, base_y + 10)
+            self.enemigo = Enemigo(base_x + 10, base_y - 100)
+            self.tiempo_disparo = tiempo_actual
+            self.intervalo_disparo = random.randint(5000, 10000)
+
+        if self.disparo:
+            self.disparo.mover()
+            if self.enemigo and not self.enemigo.explotando and self.enemigo.impactado_por(self.disparo):
+                self.enemigo.explotando = True
+                self.disparo.activo = False
+
+            if not self.disparo.activo:
+                self.disparo = None
+                self.nave_atacante = None
+                self.enemigo = None
+
+        if random.randint(0, 100) < 2:
+            self.naves.append(Nave())
+        for nave in self.naves[:]:
+            nave.mover()
+            if nave.esta_fuera_de_pantalla():
+                self.naves.remove(nave)
+
+    def dibujar(self, pantalla):
+        pantalla.fill(NES_BLACK)
+        mouse_pos = pygame.mouse.get_pos()
+
+        for estrella in self.estrellas:
             estrella.dibujar(pantalla)
 
-        # Evento automático de disparo en esquina inferior
-        if disparo is None and tiempo_actual - evento_disparo > intervalo_disparo:
-            base_x = 100
-            base_y = ALTO_PANTALLA - 150
-            nave_atacante = Nave(x=base_x, y=base_y)
-            disparo = Disparo(nave_atacante.x + 10, nave_atacante.y + 10)
-            enemigo = Enemigo(nave_atacante.x + 10, nave_atacante.y - 100)  # Mayor distancia
-            evento_disparo = tiempo_actual
-            intervalo_disparo = random.randint(5000, 10000)
+        if self.nave_atacante:
+            self.nave_atacante.dibujar(pantalla)
 
-        # Animación del disparo
-        if disparo:
-            nave_atacante.dibujar(pantalla)
-            disparo.mover()
-            disparo.dibujar(pantalla)
+        if self.disparo:
+            self.disparo.dibujar(pantalla)
 
-            if enemigo:
-                if not enemigo.explotando and enemigo.impactado_por(disparo):
-                    enemigo.explotando = True
-                    disparo.activo = False
-                if not enemigo.dibujar(pantalla):
-                    enemigo = None
-                    disparo = None
-                    nave_atacante = None
+        if self.enemigo:
+            if not self.enemigo.dibujar(pantalla):
+                self.enemigo = None
 
-            if not disparo.activo:
-                disparo = None
-
-        # Dibujar otras naves de fondo
-        if random.randint(0, 100) < 2:
-            naves.append(Nave())
-        for nave in naves[:]:
-            nave.mover()
+        for nave in self.naves:
             nave.dibujar(pantalla)
-            if nave.esta_fuera_de_pantalla():
-                naves.remove(nave)
 
-        # Botones
-        mouse_pos = pygame.mouse.get_pos()
-        for boton in botones:
-            boton.dibujar(pantalla, fuente, mouse_pos)
-
-        # Eventos
-        for evento in pygame.event.get():
-            if evento.type == pygame.QUIT:
-                esperando = False
-                pygame.quit()
-                return
-          
-
-        pygame.display.flip()
-        reloj.tick(60)
+        for boton in self.botones:
+            boton.dibujar(pantalla, self.fuente, mouse_pos)
