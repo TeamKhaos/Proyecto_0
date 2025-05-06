@@ -23,6 +23,10 @@ class Nave:
 
     def dibujar(self, pantalla):
         pygame.draw.rect(pantalla, NES_GREEN, (self.x, self.y, self.ancho, self.alto))
+# esto es para la colision de la nave y si no vale puedo borrarlo
+    def obtener_rect(self):
+        return pygame.Rect(self.x, self.y, self.ancho, self.alto)
+
 
 class NivelUnoScene:
     def __init__(self, nombre_jugador):
@@ -58,21 +62,23 @@ class NivelUnoScene:
                         self.pausa = False  # Desactivar pausa
                 if not self.pausa:
                     if event.key == pygame.K_w:  # Arriba
-                        self.nave.y -= 5
+                        self.nave.y -= 25
                     elif event.key == pygame.K_s:  # Abajo
-                        self.nave.y += 5
+                        self.nave.y += 25
                     elif event.key == pygame.K_a:  # Izquierda
-                        self.nave.x -= 5
+                        self.nave.x -= 25
                     elif event.key == pygame.K_d:  # Derecha
-                        self.nave.x += 5
+                        self.nave.x += 25
 
     def actualizar(self):
-
         if not self.pausa:
+            teclas = pygame.key.get_pressed()
+            self.nave.mover(teclas)
+
             self.contador_frames += 1
             self.enemy_manager.actualizar()
 
-            if self.contador_frames == 1200:  # Por ejemplo, luego de 1200 frames
+            if self.contador_frames == 1200:
                 self.boss.aparecer()
 
             self.boss.mover()
