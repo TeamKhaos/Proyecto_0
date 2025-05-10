@@ -30,6 +30,10 @@ class Nave:
 
 class NivelUnoScene:
     def __init__(self, nombre_jugador):
+        pygame.mixer.music.load("assets/music/music_background.mp3")
+        self.pausa_1 = pygame.mixer.Sound("assets/sounds/pause_1.wav")
+        self.pausa_2 = pygame.mixer.Sound("assets/sounds/pause_2.wav")
+        self.reproducido_pausa = False  # Controla si ya se reprodujo el sonido
         self.nombre = nombre_jugador
         self.font = pygame.font.Font("assets/fonts/upheavtt.ttf", 36)
         self.titulo_font = pygame.font.Font("assets/fonts/upheavtt.ttf", 64)
@@ -122,6 +126,10 @@ class NivelUnoScene:
         pausa_texto = self.font.render("PAUSA", True, NES_RED)
         pausa_rect = pausa_texto.get_rect(center=(self.centro_x, self.centro_y - 100))
         pantalla.blit(pausa_texto, pausa_rect)
+        # -- sonido de pausa --
+        if not self.reproducido_pausa:
+            self.pausa_1.play()
+            self.reproducido_pausa = True
 
         # --- Botón "Jugar" ---
         jugar_rect = pygame.Rect(0, 0, 240, 60)
@@ -146,8 +154,11 @@ class NivelUnoScene:
         # Eventos del mouse
         if pygame.mouse.get_pressed()[0]:  # Click izquierdo
             if jugar_rect.collidepoint(mouse_pos):
+                self.pausa_2.play()
                 self.pausa = False
+                self.reproducido_pausa = False
             elif self.boton_rect.collidepoint(mouse_pos):
                 from engine.scene_manager import SceneManager
                 from scenes.select_level import SelectLevelScene
+                pygame.mixer.music.play(-1)
                 SceneManager.cambiar_escena(SelectLevelScene(self.nombre))

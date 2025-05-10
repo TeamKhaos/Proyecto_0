@@ -4,6 +4,9 @@ from assets.colors import *
 
 class NombreJugadorScene:
         def __init__(self):
+            self.sonido_tecla = pygame.mixer.Sound("assets/sounds/coin_inicio.wav")
+            pygame.mixer.music.load("assets/music/music_background.mp3")
+            pygame.mixer.music.play(-1)
             self.font = pygame.font.Font("assets/fonts/upheavtt.ttf", 36)
             self.titulo_font = pygame.font.Font("assets/fonts/upheavtt.ttf", 64)
 
@@ -33,8 +36,9 @@ class NombreJugadorScene:
                     elif event.key == pygame.K_BACKSPACE:
                         self.input_text = self.input_text[:-1]
                     else:
-                        if len(self.input_text) < 20:
+                        if len(self.input_text) < 20 and event.unicode.isprintable():
                             self.input_text += event.unicode
+                            self.sonido_tecla.play()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:  # Clic izquierdo
                         if self.boton_rect.collidepoint(event.pos) and self.input_text.strip():

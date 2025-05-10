@@ -99,7 +99,7 @@ class Enemigo:
                 return False
             self.contador_explosion += 1
         else:
-            pygame.draw.rect(pantalla, NES_GRAY, (self.x - 10, self.y - 10, 20, 20))
+            pygame.draw.rect(pantalla, NES_GRAY_DARK, (self.x - 10, self.y - 10, 20, 20))
         return True
 
     def impactado_por(self, disparo):
@@ -140,6 +140,7 @@ class SelectLevelScene:
                         SceneManager.cambiar_escena(PantallaPrincipalScene(self.nombre_jugador))
                     elif boton.texto == "Nivel 1":
                         SceneManager.cambiar_escena(NivelUnoScene(self.nombre_jugador))
+                        pygame.mixer.music.stop()
                     else:
                         print(f"Ir a {boton.texto} (implementación pendiente)")
 
