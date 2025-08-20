@@ -1,6 +1,8 @@
 # Paleta inspirada en la NES
 NES_BLACK = (0, 0, 0)
 NES_WHITE = (255, 255, 255)
+NES_GRAY = (85, 85, 85)
+
 NES_GRAY_DARK = (85, 85, 85)
 NES_GRAY_LIGHT = (170, 170, 170)
 NES_RED = (255, 0, 0)
