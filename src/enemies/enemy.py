@@ -58,3 +58,7 @@ class Enemy:
         imagen = self.frames[self.frame_actual]
         # Dibuja la imagen en la pantalla, en la posición (x, y) del enemigo.
         pantalla.blit(imagen, (self.x, self.y))
+
+    def obtener_rect(self):
+        # Devuelve el rectángulo de colisión del enemigo.
+        return self.frames[self.frame_actual].get_rect(x=self.x, y=self.y)

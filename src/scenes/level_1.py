@@ -92,10 +92,30 @@ class NivelUnoScene:
         if not self.pausa:
             teclas = pygame.key.get_pressed()  # Obtiene un diccionario con el estado de todas las teclas
             self.nave.mover(teclas)  # Llama al método mover de la nave
-            
             self.contador_frames += 1
             self.enemy_manager.actualizar()  # Actualiza la lógica de los enemigos
             
+            # Colision de enemigos
+            self.nave_rect = self.nave.obtener_rect()
+            enemigos_a_eliminar = []
+
+            for enemigo in self.enemy_manager.enemigos:
+                enemigo_rect = enemigo.obtener_rect()
+                # .colliderect() comprueba si dos rectángulos se superponen
+                # si la nave colisiona con el jugador
+                if self.nave_rect.colliderect(enemigo_rect):
+                    print("¡Colisión detectada! La nave del jugador ha chocado con un enemigo.")
+                    # Ocultar la nave del jugador para simular que explotó.
+                    # Una forma simple es moverla fuera de la pantalla.
+                    self.nave.x = 400
+                    self.nave.y = 500
+
+                    enemigos_a_eliminar.append(enemigo)
+            # Elimina los enemigos que han colisionado
+            for enemigo in enemigos_a_eliminar:
+                if enemigo in self.enemy_manager.enemigos:
+                    self.enemy_manager.enemigos.remove(enemigo)
+
             # Si han pasado 1200 frames (aproximadamente 20 segundos a 60 FPS), el jefe aparece
             if self.contador_frames == 1200:
                 self.boss.aparecer()
