@@ -116,6 +116,14 @@ class NivelUnoScene:
                 if enemigo in self.enemy_manager.enemigos:
                     self.enemy_manager.enemigos.remove(enemigo)
 
+            # Colision con el jefe
+            if self.boss.aparecido:
+                boss_rect = self.boss.obtener_rect()
+                if self.nave_rect.colliderect(boss_rect):
+                    print("¡Colisión detectada! La nave del jugador ha chocado con el jefe.")
+                    self.nave.x = 400
+                    self.nave.y = 500
+
             # Si han pasado 1200 frames (aproximadamente 20 segundos a 60 FPS), el jefe aparece
             if self.contador_frames == 1200:
                 self.boss.aparecer()

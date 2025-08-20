@@ -64,3 +64,6 @@ class Boss:
             self.actualizar_animacion() # Llama a la función para actualizar la animación antes de dibujar.
             # Dibuja la imagen del frame actual en la posición (self.x, self.y) del jefe.
             pantalla.blit(self.frames[self.frame_actual], (self.x, self.y))
+    def obtener_rect(self):
+        # Devuelve un rectángulo que representa la posición y tamaño del jefe.
+        return pygame.Rect(self.x, self.y, 200, 200)
