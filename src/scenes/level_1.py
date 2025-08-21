@@ -1,5 +1,6 @@
 import pygame
 # Importar módulos necesarios
+from enemies.bala import BalaEnemiga
 from assets.colors import * # Asegúrate de tener los colores definidos en este archivo
 from enemies.enemy_manager import EnemyManager
 from enemies.boss import Boss
@@ -53,6 +54,8 @@ class NivelUnoScene:
         self.nave = Nave()
         self.pausa = False  # Variable para controlar el estado de pausa
 
+        self.balas = []  # Lista para almacenar las balas disparadas por la nave
+
         # Define las propiedades del botón de pausa (rectángulo y color)
         self.boton_rect = pygame.Rect(0, 0, 240, 60)
         self.boton_color = NES_BLUE
@@ -71,21 +74,29 @@ class NivelUnoScene:
                 exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    # Si se presiona ESC, se activa/desactiva la pausa
+                # Si se presiona ESC, se activa/desactiva la pausa
                     self.pausa = not self.pausa  # Cambia el estado de pausa
                 # Los siguientes movimientos se gestionan con la lógica de las teclas presionadas
                 # y no con eventos, por lo que el siguiente código de movimiento es redundante.
                 # Se puede eliminar para evitar conflictos.
                 # ⭐ Este bloque se puede simplificar o eliminar si el movimiento se maneja solo en 'actualizar'
+                elif event.key == pygame.K_j and not self.pausa:
+                    # ⭐ Detecta la tecla 'J' y llama al método de disparo
+                    self.disparar()
                 if not self.pausa:
                     if event.key == pygame.K_w:
-                        self.nave.y -= 10
+                        self.nave.y -= 5
                     elif event.key == pygame.K_s:
-                        self.nave.y += 10
+                        self.nave.y += 5
                     elif event.key == pygame.K_a:
-                        self.nave.x -= 10
+                        self.nave.x -= 5
                     elif event.key == pygame.K_d:
-                        self.nave.x += 10
+                        self.nave.x += 5
+
+    def disparar(self):
+        # Crea una nueva bala en la posición de la nave y la agrega a la lista
+        nueva_bala = BalaEnemiga(self.nave.x + self.nave.ancho // 2, self.nave.y)
+        self.balas.append(nueva_bala)
 
     def actualizar(self):
         # Lógica del juego que se ejecuta en cada fotograma
@@ -98,7 +109,25 @@ class NivelUnoScene:
             # Colision de enemigos
             self.nave_rect = self.nave.obtener_rect()
             enemigos_a_eliminar = []
-
+            # Mover las balas y gestionar colisiones
+            for bala in self.balas[:]:  # Recorre una copia de la lista
+                bala.mover()
+                
+                # Colisión de la bala con enemigos
+                for enemigo in self.enemy_manager.enemigos:
+                    if bala.obtener_rect().colliderect(enemigo.obtener_rect()):
+                        print("¡Bala impactó a un enemigo!")
+                        enemigos_a_eliminar.append(enemigo)
+                        # Elimina la bala, ya que impactó
+                        self.balas.remove(bala)
+                        # Se puede salir del bucle si solo una bala puede impactar un enemigo
+                        break 
+                # Elimina los enemigos que han sido impactados por las balas
+                for enemigo in enemigos_a_eliminar:
+                    if enemigo in self.enemy_manager.enemigos:
+                        self.enemy_manager.enemigos.remove(enemigo)
+            # Elimina las balas que han salido de la pantalla
+            self.balas = [bala for bala in self.balas if bala.y > 0]
             for enemigo in self.enemy_manager.enemigos:
                 enemigo_rect = enemigo.obtener_rect()
                 # .colliderect() comprueba si dos rectángulos se superponen
@@ -148,6 +177,10 @@ class NivelUnoScene:
             self.nave.dibujar(pantalla)
             self.enemy_manager.dibujar(pantalla)
             self.boss.dibujar(pantalla)
+
+            # ⭐ Dibuja todas las balas
+            for bala in self.balas:
+                bala.dibujar(pantalla)
 
     def dibujar_fondo_congelado(self, pantalla):
         # Dibuja el estado del juego para mostrarlo detrás del menú de pausa
