@@ -101,63 +101,64 @@ class NivelUnoScene:
     def actualizar(self):
         # Lógica del juego que se ejecuta en cada fotograma
         if not self.pausa:
-            teclas = pygame.key.get_pressed()  # Obtiene un diccionario con el estado de todas las teclas
-            self.nave.mover(teclas)  # Llama al método mover de la nave
+            teclas = pygame.key.get_pressed()
+            self.nave.mover(teclas)
             self.contador_frames += 1
-            self.enemy_manager.actualizar()  # Actualiza la lógica de los enemigos
-            
-            # Colision de enemigos
-            self.nave_rect = self.nave.obtener_rect()
+            self.enemy_manager.actualizar()
+
+            # --- GESTIÓN DE BALAS Y COLISIONES ---
+            balas_a_eliminar = []
             enemigos_a_eliminar = []
-            # Mover las balas y gestionar colisiones
-            for bala in self.balas[:]:  # Recorre una copia de la lista
+
+            # 1. Bucle principal para actualizar y detectar colisiones de balas
+            for bala in self.balas:
                 bala.mover()
                 
-                # Colisión de la bala con enemigos
+                # 2. Comprobar colisión de bala con el jefe
+                if self.boss.aparecido and bala.obtener_rect().colliderect(self.boss.obtener_rect()):
+                    print("¡Bala impactó al jefe!")
+                    self.boss.recibir_dano(1)
+                    balas_a_eliminar.append(bala)
+                    # No se necesita el 'break' aquí si usas una lista temporal de eliminación
+                
+                # 3. Comprobar colisión de bala con los enemigos normales
                 for enemigo in self.enemy_manager.enemigos:
-                    if bala.obtener_rect().colliderect(enemigo.obtener_rect()):
+                    # Solo verifica si la bala no ha sido marcada para eliminación por el jefe
+                    if bala not in balas_a_eliminar and bala.obtener_rect().colliderect(enemigo.obtener_rect()):
                         print("¡Bala impactó a un enemigo!")
                         enemigos_a_eliminar.append(enemigo)
-                        # Elimina la bala, ya que impactó
-                        self.balas.remove(bala)
-                        # Se puede salir del bucle si solo una bala puede impactar un enemigo
-                        break 
-                # Elimina los enemigos que han sido impactados por las balas
-                for enemigo in enemigos_a_eliminar:
-                    if enemigo in self.enemy_manager.enemigos:
-                        self.enemy_manager.enemigos.remove(enemigo)
-            # Elimina las balas que han salido de la pantalla
-            self.balas = [bala for bala in self.balas if bala.y > 0]
-            for enemigo in self.enemy_manager.enemigos:
-                enemigo_rect = enemigo.obtener_rect()
-                # .colliderect() comprueba si dos rectángulos se superponen
-                # si la nave colisiona con el jugador
-                if self.nave_rect.colliderect(enemigo_rect):
-                    print("¡Colisión detectada! La nave del jugador ha chocado con un enemigo.")
-                    # Ocultar la nave del jugador para simular que explotó.
-                    # Una forma simple es moverla fuera de la pantalla.
-                    self.nave.x = 400
-                    self.nave.y = 500
+                        balas_a_eliminar.append(bala)
+                        break # Salir de este bucle interno, ya que la bala impactó a un enemigo
 
-                    enemigos_a_eliminar.append(enemigo)
-            # Elimina los enemigos que han colisionado
+            # 4. Limpieza final de balas que colisionaron o salieron de la pantalla
+            self.balas = [bala for bala in self.balas if bala not in balas_a_eliminar and bala.y > 0]
+            
+            # 5. Limpieza final de enemigos que colisionaron con las balas
             for enemigo in enemigos_a_eliminar:
                 if enemigo in self.enemy_manager.enemigos:
                     self.enemy_manager.enemigos.remove(enemigo)
-
-            # Colision con el jefe
-            if self.boss.aparecido:
-                boss_rect = self.boss.obtener_rect()
-                if self.nave_rect.colliderect(boss_rect):
-                    print("¡Colisión detectada! La nave del jugador ha chocado con el jefe.")
+                    
+            # --- GESTIÓN DE COLISIONES DE LA NAVE ---
+            nave_rect = self.nave.obtener_rect()
+            
+            # Colisión de la nave con enemigos normales
+            for enemigo in self.enemy_manager.enemigos:
+                if nave_rect.colliderect(enemigo.obtener_rect()):
+                    print("¡Colisión detectada! La nave del jugador ha chocado con un enemigo.")
                     self.nave.x = 400
                     self.nave.y = 500
+            
+            # Colisión de la nave con el jefe
+            if self.boss.aparecido and nave_rect.colliderect(self.boss.obtener_rect()):
+                print("¡Colisión detectada! La nave del jugador ha chocado con el jefe.")
+                self.nave.x = 400
+                self.nave.y = 500
 
-            # Si han pasado 1200 frames (aproximadamente 20 segundos a 60 FPS), el jefe aparece
+            # --- LÓGICA DEL NIVEL ---
             if self.contador_frames == 1200:
                 self.boss.aparecer()
             
-            self.boss.mover()  # Mueve al jefe
+            self.boss.mover()
 
     def dibujar(self, pantalla):
         # Dibuja todos los elementos en la pantalla

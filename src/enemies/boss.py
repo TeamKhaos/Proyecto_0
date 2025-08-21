@@ -9,7 +9,8 @@ class Boss:
         self.x = 300
         self.y = -150
         self.velocidad = 1
-        
+        self.vida = 30
+
         # 'self.aparecido' es una bandera (flag) que controla si el jefe ya debe ser visible y moverse.
         # Se inicia en False, ya que el jefe no aparece al comienzo del nivel.
         self.aparecido = False
@@ -33,6 +34,21 @@ class Boss:
         self.frame_actual = 0  # Índice de la imagen que se muestra actualmente.
         self.contador_animacion = 0  # Contador para controlar el tiempo entre cambios de frame.
         self.tiempo_entre_frames = 6  # Define la velocidad de la animación. A mayor valor, más lenta es la animación.
+    
+    # ⭐ Nuevo método para que el jefe reciba daño
+    def recibir_dano(self, cantidad):
+        # Reduce la vida del jefe por la cantidad de daño especificada
+        self.vida -= cantidad
+        if self.vida <= 0:
+            # Si la vida llega a cero o menos, el jefe "muere"
+            self.morir()
+            
+    # ⭐ Nuevo método para manejar la muerte del jefe
+    def morir(self):
+        # Aquí puedes poner la lógica para lo que sucede cuando el jefe muere.
+        # Por ejemplo, puedes moverlo fuera de la pantalla, reproducir una explosión, etc.
+        self.aparecido = False # Lo hace invisible
+        print("¡El jefe ha sido derrotado!")
 
     def aparecer(self):
         # Este método cambia la bandera 'self.aparecido' a True.
