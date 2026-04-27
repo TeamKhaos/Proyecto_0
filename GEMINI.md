@@ -30,8 +30,9 @@ Este archivo sirve como punto de referencia para la IA y los desarrolladores sob
 - [x] Sistema de bloqueo de niveles.
 - [x] Persistencia de progreso en `src/data/data.json`.
 - [x] **Sistema de Escalado Dinámico:** Implementado letterboxing para mantener aspect ratio 4:3.
-- [x] **Corrección de Mouse en Fullscreen:** Las coordenadas del mouse se transforman de espacio real a virtual automáticamente en `main.py`.
+- [x] **Corrección de Mouse en Fullscreen:** Las coordenadas se transforman automáticamente y se sobrescribe `get_pos` para corregir clics y efectos *hover*.
 - [x] **Estabilidad de Pantalla:** Corregido bug `display Surface quit` al cambiar modos de pantalla.
+- [x] **Mejoras Visuales:** Fondo parallax de estrellas y nueva nave animada (64x64) con estados (reposo/movimiento).
 
 ## 📜 Convenciones
 1. Los colores deben importarse de `assets.colors`.

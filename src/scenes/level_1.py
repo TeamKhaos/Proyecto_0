@@ -50,13 +50,26 @@ class ParallaxManager:
 
 class Nave:
     def __init__(self, x=None, y=None):
-        self.x = x if x is not None else 380
+        self.x = x if x is not None else 368 # Ajustado para centro con 64px
         self.y = y if y is not None else 500
         self.velocidad = 6
-        self.ancho = 40
-        self.alto = 30
+        self.ancho = 64
+        self.alto = 64
         self.vida = 100
         self.max_vida = 100
+        self.tiempo_creacion = pygame.time.get_ticks()
+
+        # Cargar frames de animación
+        self.frames = []
+        try:
+            for i in range(1, 4):
+                img = pygame.image.load(f"assets/images/player/nave_default{i}.png").convert_alpha()
+                img = pygame.transform.scale(img, (self.ancho, self.alto))
+                self.frames.append(img)
+        except pygame.error:
+            # Fallback si no se encuentran las imágenes
+            print("Error cargando assets de la nave, usando fallback visual.")
+            self.frames = [None]
 
     def recibir_dano(self, cantidad):
         self.vida -= cantidad
@@ -69,10 +82,29 @@ class Nave:
         if teclas[pygame.K_d] and self.x < 800 - self.ancho: self.x += self.velocidad
 
     def dibujar(self, pantalla):
-        pygame.draw.rect(pantalla, NES_GREEN, (self.x, self.y, self.ancho, self.alto))
+        if self.frames[0]:
+            tiempo_actual = pygame.time.get_ticks()
+            
+            # 1. Durante el primer 1.5 segundo mostramos nave_default1 (Aparición)
+            if tiempo_actual - self.tiempo_creacion < 1500:
+                frame_actual = 0
+            else:
+                # 2. Verificar si hay alguna tecla de movimiento presionada
+                teclas = pygame.key.get_pressed()
+                moviendose = teclas[pygame.K_w] or teclas[pygame.K_s] or teclas[pygame.K_a] or teclas[pygame.K_d]
+                
+                if moviendose:
+                    frame_actual = 2 # nave_default3 (Movimiento)
+                else:
+                    frame_actual = 1 # nave_default2 (Quieta)
+            
+            pantalla.blit(self.frames[frame_actual], (self.x, self.y))
+        else:
+            pygame.draw.rect(pantalla, NES_GREEN, (self.x, self.y, self.ancho, self.alto))
 
     def obtener_rect(self):
-        return pygame.Rect(self.x, self.y, self.ancho, self.alto)
+        # Reducimos un poco el hitbox para que sea más justo con el sprite circular/triangular
+        return pygame.Rect(self.x + 10, self.y + 10, self.ancho - 20, self.alto - 20)
 
 class NivelUnoScene:
     def __init__(self, nombre_jugador):
