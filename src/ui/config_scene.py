@@ -1,7 +1,7 @@
 import pygame
-from settings import WIDTH, HEIGHT, FULLSCREEN
+from settings import V_WIDTH as WIDTH, V_HEIGHT as HEIGHT
 from engine.scene_manager import SceneManager
-from assets.colors import * # Importa la paleta de colores
+from assets.colors import * 
 
 class ConfigScene:
     def __init__(self, nombre):
@@ -10,21 +10,16 @@ class ConfigScene:
         self.titulo_font = pygame.font.Font("assets/fonts/upheavtt.ttf", 60)
         self.titulo = self.titulo_font.render("Configuración", True, NES_YELLOW)
 
-        self.fullscreen = FULLSCREEN
-        self.volumen = 0.5
+        self.volumen = 0.5 # Valor por defecto, se podría cargar de un JSON
 
         self.boton_ancho = 530
         self.boton_alto = 60
         self.x_boton = WIDTH // 2 - self.boton_ancho // 2
 
-        # Nuevas posiciones
-        self.y_fs = 150
-        self.y_vol = 270
-        self.y_barra = self.y_vol + 50
-        self.y_volumen_botones = self.y_barra + 30
-        self.y_volver = self.y_volumen_botones + 100
-
-        self.boton_fullscreen_rect = pygame.Rect(self.x_boton, self.y_fs, self.boton_ancho, self.boton_alto)
+        # Posiciones originales
+        self.y_vol = 200
+        self.y_volumen_botones = 280
+        self.y_volver = 420
 
         # Volumen - botones y barra
         self.boton_volumen_menos_rect = pygame.Rect(self.x_boton, self.y_volumen_botones, 50, 50)
@@ -40,26 +35,19 @@ class ConfigScene:
         self.boton_color_normal = NES_BLUE
         self.boton_color_hover = NES_LIGHT_BLUE
         self.texto_color = NES_WHITE
-        self.accent_color = NES_YELLOW
 
     def manejar_eventos(self, eventos, pantalla = None):
         for evento in eventos:
             if evento.type == pygame.QUIT:
                 pygame.quit()
-                quit()
+                exit()
             elif evento.type == pygame.MOUSEBUTTONDOWN:
-                if self.boton_fullscreen_rect.collidepoint(evento.pos):
-                    self.fullscreen = not self.fullscreen
-                    flags = pygame.FULLSCREEN if self.fullscreen else 0
-                    pygame.display.set_mode((WIDTH, HEIGHT), flags)
-                elif self.boton_volumen_mas_rect.collidepoint(evento.pos):
+                if self.boton_volumen_mas_rect.collidepoint(evento.pos):
                     self.volumen = min(1.0, self.volumen + 0.1)
-                    pygame.mixer.music.set_volume(self.volumen)
                 elif self.boton_volumen_menos_rect.collidepoint(evento.pos):
                     self.volumen = max(0.0, self.volumen - 0.1)
-                    pygame.mixer.music.set_volume(self.volumen)
                 elif self.boton_volver_rect.collidepoint(evento.pos):
-                    from ui.main_menu import PantallaPrincipalScene
+                    from ui.pantalla_principal import PantallaPrincipalScene
                     SceneManager.cambiar_escena(PantallaPrincipalScene(self.nombre))
 
     def actualizar(self):
@@ -69,19 +57,9 @@ class ConfigScene:
         pantalla.fill(NES_BLACK)
 
         # Título
-        pantalla.blit(self.titulo, (WIDTH // 2 - self.titulo.get_width() // 2, 60))
+        pantalla.blit(self.titulo, (WIDTH // 2 - self.titulo.get_width() // 2, 80))
 
         mouse_pos = pygame.mouse.get_pos()
-
-        # --- Pantalla completa ---
-        pygame.draw.rect(pantalla, self.boton_color_hover if self.boton_fullscreen_rect.collidepoint(mouse_pos) else self.boton_color_normal,
-                        self.boton_fullscreen_rect, border_radius=10)
-        pygame.draw.rect(pantalla, NES_WHITE, self.boton_fullscreen_rect, 2, border_radius=10)
-
-        texto_fs = self.font.render("Pantalla completa:", True, self.texto_color)
-        estado_fs = self.font.render("ON" if self.fullscreen else "OFF", True, NES_GREEN if self.fullscreen else NES_RED)
-        pantalla.blit(texto_fs, (self.boton_fullscreen_rect.x + 20, self.boton_fullscreen_rect.y + 12))
-        pantalla.blit(estado_fs, (self.boton_fullscreen_rect.right - estado_fs.get_width() - 20, self.boton_fullscreen_rect.y + 12))
 
         # --- Volumen ---
         vol_label = self.font.render(f"Volumen: {int(self.volumen * 100)}%", True, self.texto_color)

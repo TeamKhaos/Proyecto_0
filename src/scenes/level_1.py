@@ -1,233 +1,323 @@
 import pygame
-# Importar módulos necesarios
-from enemies.bala import BalaEnemiga
-from assets.colors import * # Asegúrate de tener los colores definidos en este archivo
+import random
+from enemies.bala import Bala
+from assets.colors import * 
 from enemies.enemy_manager import EnemyManager
 from enemies.boss import Boss
+from engine.progreso_manager import completar_nivel_1
 
-# --- Clase de la Nave ---
-class Nave:
-    def __init__(self, x=None, y=None):
-        # Inicializa las propiedades de la nave
-        # Si no se dan coordenadas, usa valores predeterminados
-        self.x = x if x is not None else 400
-        self.y = y if y is not None else 500
-        self.velocidad = 5
-        self.ancho = 40
-        self.alto = 30
+class Estrella:
+    def __init__(self, x, y, velocidad, tamano, color):
+        self.x = x
+        self.y = y
+        self.velocidad = velocidad
+        self.tamano = tamano
+        self.color = color
 
-    def mover(self, teclas):
-        # Mueve la nave basándose en las teclas presionadas
-        if teclas[pygame.K_w]:  # Tecla 'W'
-            self.y -= self.velocidad
-        if teclas[pygame.K_s]:  # Tecla 'S'
-            self.y += self.velocidad
-        if teclas[pygame.K_a]:  # Tecla 'A'
-            self.x -= self.velocidad
-        if teclas[pygame.K_d]:  # Tecla 'D'
-            self.x += self.velocidad
+    def mover(self, alto_pantalla):
+        self.y += self.velocidad
+        if self.y > alto_pantalla:
+            self.y = 0
+            self.x = random.randint(0, 800)
 
     def dibujar(self, pantalla):
-        # Dibuja la nave como un rectángulo en la pantalla
+        pygame.draw.circle(pantalla, self.color, (int(self.x), int(self.y)), self.tamano)
+
+class ParallaxManager:
+    def __init__(self, ancho, alto):
+        self.ancho = ancho
+        self.alto = alto
+        self.capas = []
+        # Capa lejana (pequeña y lenta)
+        self.capas.append([Estrella(random.randint(0, ancho), random.randint(0, alto), 
+                                   random.uniform(0.1, 0.5), 1, NES_GRAY) for _ in range(80)])
+        # Capa media
+        self.capas.append([Estrella(random.randint(0, ancho), random.randint(0, alto), 
+                                   random.uniform(0.6, 1.2), 2, NES_WHITE) for _ in range(40)])
+        # Capa cercana (más grande y rápida)
+        self.capas.append([Estrella(random.randint(0, ancho), random.randint(0, alto), 
+                                   random.uniform(1.5, 2.5), 3, NES_LIGHT_BLUE) for _ in range(15)])
+
+    def actualizar(self):
+        for capa in self.capas:
+            for estrella in capa:
+                estrella.mover(self.alto)
+
+    def dibujar(self, pantalla):
+        for capa in self.capas:
+            for estrella in capa:
+                estrella.dibujar(pantalla)
+
+class Nave:
+    def __init__(self, x=None, y=None):
+        self.x = x if x is not None else 380
+        self.y = y if y is not None else 500
+        self.velocidad = 6
+        self.ancho = 40
+        self.alto = 30
+        self.vida = 100
+        self.max_vida = 100
+
+    def recibir_dano(self, cantidad):
+        self.vida -= cantidad
+        if self.vida < 0: self.vida = 0
+
+    def mover(self, teclas):
+        if teclas[pygame.K_w] and self.y > 0: self.y -= self.velocidad
+        if teclas[pygame.K_s] and self.y < 600 - self.alto: self.y += self.velocidad
+        if teclas[pygame.K_a] and self.x > 0: self.x -= self.velocidad
+        if teclas[pygame.K_d] and self.x < 800 - self.ancho: self.x += self.velocidad
+
+    def dibujar(self, pantalla):
         pygame.draw.rect(pantalla, NES_GREEN, (self.x, self.y, self.ancho, self.alto))
 
-    # Obtiene el rectángulo de colisión de la nave. Esto es útil para detectar colisiones con otros objetos.
     def obtener_rect(self):
         return pygame.Rect(self.x, self.y, self.ancho, self.alto)
 
-# --- Clase de la Escena del Nivel Uno ---
 class NivelUnoScene:
     def __init__(self, nombre_jugador):
-        # Inicializa la escena del nivel
         self.nombre = nombre_jugador
-        # Carga las fuentes necesarias.
         self.font = pygame.font.Font("assets/fonts/upheavtt.ttf", 36)
+        self.font_pquena = pygame.font.Font("assets/fonts/upheavtt.ttf", 20)
         self.titulo_font = pygame.font.Font("assets/fonts/upheavtt.ttf", 64)
         
-        # Define las dimensiones de la pantalla y el centro
         self.ancho_pantalla = 800
         self.alto_pantalla = 600
         self.centro_x = self.ancho_pantalla // 2
         self.centro_y = self.alto_pantalla // 2
 
-        # Crea una instancia de la nave del jugador
         self.nave = Nave()
-        self.pausa = False  # Variable para controlar el estado de pausa
+        self.pausa = False
+        self.balas_jugador = []  
+        self.balas_enemigas = []
 
-        self.balas = []  # Lista para almacenar las balas disparadas por la nave
-
-        # Define las propiedades del botón de pausa (rectángulo y color)
+        self.enemy_manager = EnemyManager()
+        self.boss = Boss()
+        self.parallax = ParallaxManager(self.ancho_pantalla, self.alto_pantalla)
+        self.victoria = False
+        self.game_over = False
+        
         self.boton_rect = pygame.Rect(0, 0, 240, 60)
         self.boton_color = NES_BLUE
 
-        # Inicializa el gestor de enemigos y el jefe
-        self.enemy_manager = EnemyManager()
-        self.boss = Boss()
-        self.contador_frames = 0  # Contador para gestionar eventos temporizados (como la aparición del jefe)
-
     def manejar_eventos(self, eventos, pantalla):
-        # Procesa los eventos de entrada del usuario
         for event in eventos:
             if event.type == pygame.QUIT:
-                # Si el usuario cierra la ventana, el juego termina
                 pygame.quit()
                 exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                # Si se presiona ESC, se activa/desactiva la pausa
-                    self.pausa = not self.pausa  # Cambia el estado de pausa
-                # Los siguientes movimientos se gestionan con la lógica de las teclas presionadas
-                # y no con eventos, por lo que el siguiente código de movimiento es redundante.
-                # Se puede eliminar para evitar conflictos.
-                # ⭐ Este bloque se puede simplificar o eliminar si el movimiento se maneja solo en 'actualizar'
-                elif event.key == pygame.K_j and not self.pausa:
-                    # ⭐ Detecta la tecla 'J' y llama al método de disparo
+                    self.pausa = not self.pausa
+                elif event.key == pygame.K_j and not self.pausa and not self.victoria and not self.game_over:
                     self.disparar()
-                if not self.pausa:
-                    if event.key == pygame.K_w:
-                        self.nave.y -= 5
-                    elif event.key == pygame.K_s:
-                        self.nave.y += 5
-                    elif event.key == pygame.K_a:
-                        self.nave.x -= 5
-                    elif event.key == pygame.K_d:
-                        self.nave.x += 5
 
     def disparar(self):
-        # Crea una nueva bala en la posición de la nave y la agrega a la lista
-        nueva_bala = BalaEnemiga(self.nave.x + self.nave.ancho // 2, self.nave.y)
-        self.balas.append(nueva_bala)
+        nueva_bala = Bala(self.nave.x + self.nave.ancho // 2, self.nave.y, direccion=-1, color=NES_YELLOW)
+        self.balas_jugador.append(nueva_bala)
+
+    def dibujar_barra_vida(self, pantalla, x, y, ancho, alto, vida, max_vida, color_barra):
+        pygame.draw.rect(pantalla, NES_WHITE, (x - 2, y - 2, ancho + 4, alto + 4), 2)
+        ancho_actual = (vida / max_vida) * ancho if max_vida > 0 else 0
+        pygame.draw.rect(pantalla, color_barra, (x, y, ancho_actual, alto))
+
+    def mostrar_game_over(self, pantalla):
+        overlay = pygame.Surface((self.ancho_pantalla, self.alto_pantalla), pygame.SRCALPHA)
+        overlay.fill((50, 0, 0, 200)) # Tono rojizo oscuro
+        pantalla.blit(overlay, (0, 0))
+
+        texto = self.titulo_font.render("GAME OVER", True, NES_RED)
+        pantalla.blit(texto, texto.get_rect(center=(self.centro_x, self.centro_y - 100)))
+        
+        # Botón REINTENTAR
+        reintentar_rect = pygame.Rect(0, 0, 240, 60)
+        reintentar_rect.center = (self.centro_x, self.centro_y)
+        mouse_pos = pygame.mouse.get_pos()
+        color_reintentar = NES_ORANGE if reintentar_rect.collidepoint(mouse_pos) else NES_GREEN
+        pygame.draw.rect(pantalla, self.boton_color, reintentar_rect, border_radius=10)
+        pygame.draw.rect(pantalla, color_reintentar, reintentar_rect, 4, border_radius=10)
+        pantalla.blit(self.font_pquena.render("REINTENTAR", True, NES_WHITE), 
+                      self.font_pquena.render("REINTENTAR", True, NES_WHITE).get_rect(center=reintentar_rect.center))
+
+        # Botón MENU
+        self.boton_rect.center = (self.centro_x, self.centro_y + 80)
+        color_menu = NES_ORANGE if self.boton_rect.collidepoint(mouse_pos) else NES_GREEN
+        pygame.draw.rect(pantalla, self.boton_color, self.boton_rect, border_radius=10)
+        pygame.draw.rect(pantalla, color_menu, self.boton_rect, 4, border_radius=10)
+        pantalla.blit(self.font_pquena.render("VOLVER AL MENU", True, NES_WHITE), 
+                      self.font_pquena.render("VOLVER AL MENU", True, NES_WHITE).get_rect(center=self.boton_rect.center))
+
+        if pygame.mouse.get_pressed()[0]:
+            from engine.scene_manager import SceneManager
+            if reintentar_rect.collidepoint(mouse_pos):
+                SceneManager.cambiar_escena(NivelUnoScene(self.nombre))
+            elif self.boton_rect.collidepoint(mouse_pos):
+                from scenes.select_level import SelectLevelScene
+                SceneManager.cambiar_escena(SelectLevelScene(self.nombre))
+
+    def mostrar_victoria(self, pantalla):
+        # Capa semi-transparente
+        overlay = pygame.Surface((self.ancho_pantalla, self.alto_pantalla), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 200))
+        pantalla.blit(overlay, (0, 0))
+
+        # Texto de Victoria
+        texto = self.titulo_font.render("¡VICTORIA!", True, NES_GREEN)
+        pantalla.blit(texto, texto.get_rect(center=(self.centro_x, self.centro_y - 100)))
+        
+        mensaje = self.font_pquena.render("Felicidades haz pasado el nivel 1", True, NES_WHITE)
+        pantalla.blit(mensaje, mensaje.get_rect(center=(self.centro_x, self.centro_y - 30)))
+
+        # Botón para volver
+        self.boton_rect.center = (self.centro_x, self.centro_y + 80)
+        mouse_pos = pygame.mouse.get_pos()
+        color_borde = NES_ORANGE if self.boton_rect.collidepoint(mouse_pos) else NES_GREEN
+        pygame.draw.rect(pantalla, self.boton_color, self.boton_rect, border_radius=10)
+        pygame.draw.rect(pantalla, color_borde, self.boton_rect, 4, border_radius=10)
+        
+        texto_volver = self.font_pquena.render("VOLVER AL MENU", True, NES_WHITE)
+        pantalla.blit(texto_volver, texto_volver.get_rect(center=self.boton_rect.center))
+
+        if pygame.mouse.get_pressed()[0] and self.boton_rect.collidepoint(mouse_pos):
+            from engine.scene_manager import SceneManager
+            from scenes.select_level import SelectLevelScene
+            SceneManager.cambiar_escena(SelectLevelScene(self.nombre))
 
     def actualizar(self):
-        # Lógica del juego que se ejecuta en cada fotograma
-        if not self.pausa:
-            teclas = pygame.key.get_pressed()
-            self.nave.mover(teclas)
-            self.contador_frames += 1
-            self.enemy_manager.actualizar()
+        if self.pausa or self.victoria or self.game_over: return
 
-            # --- GESTIÓN DE BALAS Y COLISIONES ---
-            balas_a_eliminar = []
-            enemigos_a_eliminar = []
+        self.parallax.actualizar()
 
-            # 1. Bucle principal para actualizar y detectar colisiones de balas
-            for bala in self.balas:
-                bala.mover()
-                
-                # 2. Comprobar colisión de bala con el jefe
-                if self.boss.aparecido and bala.obtener_rect().colliderect(self.boss.obtener_rect()):
-                    print("¡Bala impactó al jefe!")
-                    self.boss.recibir_dano(1)
-                    balas_a_eliminar.append(bala)
-                    # No se necesita el 'break' aquí si usas una lista temporal de eliminación
-                
-                # 3. Comprobar colisión de bala con los enemigos normales
-                for enemigo in self.enemy_manager.enemigos:
-                    # Solo verifica si la bala no ha sido marcada para eliminación por el jefe
-                    if bala not in balas_a_eliminar and bala.obtener_rect().colliderect(enemigo.obtener_rect()):
-                        print("¡Bala impactó a un enemigo!")
-                        enemigos_a_eliminar.append(enemigo)
-                        balas_a_eliminar.append(bala)
-                        break # Salir de este bucle interno, ya que la bala impactó a un enemigo
+        if self.boss.derrotado:
+            completar_nivel_1()
+            self.victoria = True
+            return
+        
+        if self.nave.vida <= 0:
+            self.game_over = True
+            return
 
-            # 4. Limpieza final de balas que colisionaron o salieron de la pantalla
-            self.balas = [bala for bala in self.balas if bala not in balas_a_eliminar and bala.y > 0]
-            
-            # 5. Limpieza final de enemigos que colisionaron con las balas
-            for enemigo in enemigos_a_eliminar:
-                if enemigo in self.enemy_manager.enemigos:
-                    self.enemy_manager.enemigos.remove(enemigo)
-                    
-            # --- GESTIÓN DE COLISIONES DE LA NAVE ---
-            nave_rect = self.nave.obtener_rect()
-            
-            # Colisión de la nave con enemigos normales
-            for enemigo in self.enemy_manager.enemigos:
-                if nave_rect.colliderect(enemigo.obtener_rect()):
-                    print("¡Colisión detectada! La nave del jugador ha chocado con un enemigo.")
-                    self.nave.x = 400
-                    self.nave.y = 500
-            
-            # Colisión de la nave con el jefe
-            if self.boss.aparecido and nave_rect.colliderect(self.boss.obtener_rect()):
-                print("¡Colisión detectada! La nave del jugador ha chocado con el jefe.")
-                self.nave.x = 400
-                self.nave.y = 500
+        teclas = pygame.key.get_pressed()
+        self.nave.mover(teclas)
+        
+        # 1. Actualizar Gestor de Enemigos
+        status, nuevas_balas = self.enemy_manager.actualizar()
+        self.balas_enemigas.extend(nuevas_balas)
 
-            # --- LÓGICA DEL NIVEL ---
-            if self.contador_frames == 1200:
-                self.boss.aparecer()
-            
+        if status == "BOSS_TIME" and not self.boss.aparecido:
+            self.boss.aparecer()
+
+        # 2. Lógica del Jefe
+        if self.boss.aparecido:
             self.boss.mover()
+            if self.boss.puede_disparar():
+                self.balas_enemigas.extend(self.boss.disparar())
+
+        # 3. Mover Balas
+        for b in self.balas_jugador: b.mover()
+        for b in self.balas_enemigas: b.mover()
+
+        # 4. Colisiones: Balas Jugador -> Enemigos/Jefe
+        balas_j_eliminar = []
+        for b in self.balas_jugador:
+            if self.boss.aparecido and b.obtener_rect().colliderect(self.boss.obtener_rect()):
+                self.boss.recibir_dano(2)
+                balas_j_eliminar.append(b)
+                continue
+            for e in self.enemy_manager.enemigos:
+                if b.obtener_rect().colliderect(e.obtener_rect()):
+                    self.enemy_manager.enemigos.remove(e)
+                    balas_j_eliminar.append(b)
+                    break
+        
+        self.balas_jugador = [b for b in self.balas_jugador if b not in balas_j_eliminar and b.y > -10]
+
+        # 5. Colisiones: Balas Enemigas -> Nave
+        balas_e_eliminar = []
+        nave_rect = self.nave.obtener_rect()
+        for b in self.balas_enemigas:
+            if b.obtener_rect().colliderect(nave_rect):
+                self.nave.recibir_dano(5)
+                balas_e_eliminar.append(b)
+        
+        self.balas_enemigas = [b for b in self.balas_enemigas if b not in balas_e_eliminar and b.y < 610]
+
+        # 6. Colisiones: Nave -> Enemigos
+        for e in self.enemy_manager.enemigos:
+            if nave_rect.colliderect(e.obtener_rect()):
+                self.nave.recibir_dano(20)
+                self.enemy_manager.enemigos.remove(e)
+
+        # 7. Verificar Fin del Juego
+        if self.nave.vida <= 0:
+            print("GAME OVER")
+            # Aquí podrías cambiar a una escena de Game Over
 
     def dibujar(self, pantalla):
-        # Dibuja todos los elementos en la pantalla
         if self.pausa:
-            # Si el juego está en pausa, muestra el menú de pausa
             self.mostrar_menu_pausa(pantalla)
-        else:
-            # Si no está en pausa, dibuja el juego normal
-            pantalla.fill(NES_BLACK) # Rellena el fondo
-            
-            # Dibuja el título del nivel
-            titulo = self.titulo_font.render("Nivel 1", True, NES_GREEN)
-            titulo_rect = titulo.get_rect(center=(self.centro_x, 100))
-            pantalla.blit(titulo, titulo_rect)
-            
-            # Llama a los métodos de dibujo de la nave y los enemigos
-            self.nave.dibujar(pantalla)
-            self.enemy_manager.dibujar(pantalla)
-            self.boss.dibujar(pantalla)
+            return
 
-            # ⭐ Dibuja todas las balas
-            for bala in self.balas:
-                bala.dibujar(pantalla)
+        pantalla.fill(NES_BLACK)
+        self.parallax.dibujar(pantalla)
+        
+        # --- UI ---
+        texto_vida = self.font_pquena.render(f"HP: {self.nave.vida}", True, NES_WHITE)
+        pantalla.blit(texto_vida, (20, 20))
+        self.dibujar_barra_vida(pantalla, 20, 45, 200, 15, self.nave.vida, self.nave.max_vida, NES_RED)
+
+        texto_wave = self.font_pquena.render(f"OLEADA: {self.enemy_manager.oleada_actual}", True, NES_WHITE)
+        pantalla.blit(texto_wave, (650, 20))
+
+        if self.boss.aparecido:
+            texto_boss = self.font_pquena.render("JEFE MAESTRO", True, NES_RED)
+            pantalla.blit(texto_boss, (self.centro_x - 60, 20))
+            self.dibujar_barra_vida(pantalla, self.centro_x - 150, 45, 300, 20, self.boss.vida, self.boss.max_vida, NES_ORANGE)
+
+        # --- Entidades ---
+        self.nave.dibujar(pantalla)
+        self.enemy_manager.dibujar(pantalla)
+        self.boss.dibujar(pantalla)
+
+        for b in self.balas_jugador: b.dibujar(pantalla)
+        for b in self.balas_enemigas: b.dibujar(pantalla)
+
+        if self.victoria:
+            self.mostrar_victoria(pantalla)
+        
+        if self.game_over:
+            self.mostrar_game_over(pantalla)
 
     def dibujar_fondo_congelado(self, pantalla):
-        # Dibuja el estado del juego para mostrarlo detrás del menú de pausa
         pantalla.fill(NES_BLACK)
-        titulo = self.titulo_font.render("Nivel 1", True, NES_GREEN)
-        pantalla.blit(titulo, titulo.get_rect(center=(self.centro_x, 100)))
+        self.parallax.dibujar(pantalla)
         self.nave.dibujar(pantalla)
+        self.enemy_manager.dibujar(pantalla)
+        self.boss.dibujar(pantalla)
 
     def mostrar_menu_pausa(self, pantalla):
-        # Lógica para dibujar el menú de pausa
         self.dibujar_fondo_congelado(pantalla)
-        
-        # Dibuja una capa semi-transparente sobre el juego
         overlay = pygame.Surface((self.ancho_pantalla, self.alto_pantalla), pygame.SRCALPHA)
-        overlay.fill((0, 0, 0, 180))  # Color negro con 180 de transparencia (de 0 a 255)
+        overlay.fill((0, 0, 0, 180))
         pantalla.blit(overlay, (0, 0))
         
-        # Dibuja el texto de "PAUSA"
         pausa_texto = self.font.render("PAUSA", True, NES_RED)
-        pausa_rect = pausa_texto.get_rect(center=(self.centro_x, self.centro_y - 100))
-        pantalla.blit(pausa_texto, pausa_rect)
+        pantalla.blit(pausa_texto, pausa_texto.get_rect(center=(self.centro_x, self.centro_y - 100)))
         
-        # Dibuja y gestiona el botón "Jugar"
         jugar_rect = pygame.Rect(0, 0, 240, 60)
         jugar_rect.center = (self.centro_x, self.centro_y - 20)
         mouse_pos = pygame.mouse.get_pos()
-        color_borde_jugar = NES_ORANGE if jugar_rect.collidepoint(mouse_pos) else NES_GREEN
         pygame.draw.rect(pantalla, self.boton_color, jugar_rect, border_radius=10)
-        pygame.draw.rect(pantalla, color_borde_jugar, jugar_rect, 4, border_radius=10)
         texto_jugar = self.font.render("Jugar", True, NES_WHITE)
         pantalla.blit(texto_jugar, texto_jugar.get_rect(center=jugar_rect.center))
         
-        # Dibuja y gestiona el botón "Volver"
         self.boton_rect.center = (self.centro_x, self.centro_y + 60)
-        color_borde_volver = NES_ORANGE if self.boton_rect.collidepoint(mouse_pos) else NES_GREEN
         pygame.draw.rect(pantalla, self.boton_color, self.boton_rect, border_radius=10)
-        pygame.draw.rect(pantalla, color_borde_volver, self.boton_rect, 4, border_radius=10)
         texto_volver = self.font.render("Volver", True, NES_WHITE)
         pantalla.blit(texto_volver, texto_volver.get_rect(center=self.boton_rect.center))
         
-        # Manejo de los clics del mouse
-        if pygame.mouse.get_pressed()[0]:  # Comprueba si el botón izquierdo del ratón está presionado
-            if jugar_rect.collidepoint(mouse_pos):
-                self.pausa = False  # Reanuda el juego
+        if pygame.mouse.get_pressed()[0]:
+            if jugar_rect.collidepoint(mouse_pos): self.pausa = False
             elif self.boton_rect.collidepoint(mouse_pos):
                 from engine.scene_manager import SceneManager
                 from scenes.select_level import SelectLevelScene
-                # Vuelve a la pantalla de selección de nivel
                 SceneManager.cambiar_escena(SelectLevelScene(self.nombre))

@@ -1,25 +1,32 @@
 import pygame
 from assets.colors import *
-class BalaEnemiga:
-    # Representa una bala disparada por un enemigo en el juego.
-    def __init__(self, x, y):
-        # Inicializa la bala con una posición, velocidad y radio.
-        # x (int): La coordenada x inicial de la bala.
-        # y (int): La coordenada y inicial de la bala.
+
+class Bala:
+    """Representa un proyectil en el juego, usado tanto por jugadores como por enemigos."""
+    def __init__(self, x, y, velocidad=7, direccion=-1, color=NES_WHITE):
+        """
+        Inicializa la bala.
+        :param x: Posición X inicial.
+        :param y: Posición Y inicial.
+        :param velocidad: Rapidez de movimiento.
+        :param direccion: -1 para subir (jugador), 1 para bajar (enemigo).
+        :param color: Color del proyectil.
+        """
         self.x = x
         self.y = y
-        self.velocidad = 7
-        self.radio = 3
+        self.velocidad = velocidad
+        self.direccion = direccion
+        self.color = color
+        self.radio = 4
+
     def mover(self):
-        # Actualiza la posición de la bala, moviéndola hacia arriba en la pantalla.
-        self.y -= self.velocidad
+        # Actualiza la posición basándose en la dirección (1 o -1)
+        self.y += (self.velocidad * self.direccion)
+
     def dibujar(self, pantalla):
-        # Dibuja la bala en la pantalla como un círculo.
-        # pantalla (pygame.Surface): La superficie de la pantalla donde se dibujará la bala.
-        # Dibuja la bala como un círculo, usando el color NES_WHITE
-        pygame.draw.circle(pantalla, NES_WHITE, (self.x, self.y), self.radio)
+        # Dibuja la bala como un círculo
+        pygame.draw.circle(pantalla, self.color, (int(self.x), int(self.y)), self.radio)
+
     def obtener_rect(self):
-        # Devuelve un objeto pygame.Rect que representa el área de colisión de la bala.
-        # Pygame.Rect: El rectángulo de colisión de la bala.
-        # Crea y devuelve un rectángulo para la detección de colisiones
+        # Devuelve el rectángulo de colisión
         return pygame.Rect(self.x - self.radio, self.y - self.radio, self.radio * 2, self.radio * 2)

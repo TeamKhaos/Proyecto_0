@@ -41,13 +41,18 @@ class PantallaPrincipalScene:
 
         self.botones = {
             "iniciar": pygame.Rect(0, 0, self.boton_ancho, self.boton_alto),
+            "tutorial": pygame.Rect(0, 0, self.boton_ancho, self.boton_alto),
             "configuración": pygame.Rect(0, 0, self.boton_ancho, self.boton_alto),
             "salir": pygame.Rect(0, 0, self.boton_ancho, self.boton_alto),
         }
+        
+        # Botón de Tamaño de Pantalla (Esquina Superior Derecha)
+        self.btn_resize = pygame.Rect(740, 10, 50, 50)
 
         self._posicionar_botones()
 
     def _posicionar_botones(self):
+        # ... (código anterior)
         total_altura = len(self.botones) * self.boton_alto + (len(self.botones) - 1) * self.espacio_entre_botones
         inicio_y = (self.alto_pantalla // 2 + 50) - total_altura // 2
 
@@ -60,29 +65,46 @@ class PantallaPrincipalScene:
                 pygame.quit()
                 exit()
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                from engine.scene_manager import SceneManager
+                
+                # Clic en el botón de redimensionar (esquina)
+                if self.btn_resize.collidepoint(event.pos):
+                    import settings
+                    settings.toggle_fullscreen()
+                    return
+
                 if self.botones["iniciar"].collidepoint(event.pos):
-                    from engine.scene_manager import SceneManager
                     SceneManager.cambiar_escena(SelectLevelScene(self.nombre))
+                elif self.botones["tutorial"].collidepoint(event.pos):
+                    from ui.tutorial_scene import TutorialScene
+                    SceneManager.cambiar_escena(TutorialScene(self.nombre))
                 elif self.botones["configuración"].collidepoint(event.pos):
-                    from engine.scene_manager import SceneManager
                     SceneManager.cambiar_escena(ConfigScene(self.nombre))
                 elif self.botones["salir"].collidepoint(event.pos):
                     pygame.quit()
                     exit()
 
     def actualizar(self):
-        # Actualizar posición de las estrellas
+        # ... (estrellas)
         for estrella in self.estrellas:
             estrella.mover()
 
     def dibujar(self, pantalla):
         pantalla.fill(NES_BLACK)
         
-        # Dibujar estrellas de fondo
         for estrella in self.estrellas:
             estrella.dibujar(pantalla)
 
-        # Título con efecto de brillo (opcional)
+        # Botón Resize (Dibujo)
+        mouse_pos = pygame.mouse.get_pos()
+        color_res = NES_BLUE if not self.btn_resize.collidepoint(mouse_pos) else NES_LIGHT_BLUE
+        pygame.draw.rect(pantalla, color_res, self.btn_resize, border_radius=5)
+        pygame.draw.rect(pantalla, NES_WHITE, self.btn_resize, 2, border_radius=5)
+        # Dibujar un pequeño ícono de "expandir"
+        pygame.draw.rect(pantalla, NES_WHITE, (750, 20, 30, 30), 2)
+        pygame.draw.line(pantalla, NES_WHITE, (750, 20), (780, 50), 2)
+
+        # Título y demás...
         titulo = self.titulo_font.render("Star Rogue", True, NES_YELLOW)
         pantalla.blit(titulo, titulo.get_rect(center=(self.centro_x, 100)))
 
