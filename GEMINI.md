@@ -34,6 +34,11 @@ Este archivo sirve como punto de referencia para la IA y los desarrolladores sob
 - [x] **Estabilidad de Pantalla:** Corregido bug `display Surface quit` al cambiar modos de pantalla.
 - [x] **Mejoras Visuales:** Fondo parallax de estrellas y nueva nave animada (64x64) con estados (reposo/movimiento).
 
+### Fase 4: Corrección de Errores y Pulido [EN PROGRESO]
+- [x] **Corrección de Crash:** Añadidos atributos `ancho` y `alto` a las clases `Enemy` y `Boss`.
+- [x] **Optimización de Colisiones:** Corregida la eliminación de elementos de una lista durante su iteración en `level_1.py`.
+- [x] **Mejora de Partículas:** Implementado sistema de partículas retro (cuadradas) con física de fricción y paleta NES.
+
 ## 📜 Convenciones
 1. Los colores deben importarse de `assets.colors`.
 2. Las colisiones se manejan preferentemente mediante `pygame.Rect`.
@@ -44,3 +49,6 @@ Este archivo sirve como punto de referencia para la IA y los desarrolladores sob
 1. Implementar el Nivel 2 con nuevos tipos de enemigos.
 2. Añadir efectos de sonido y música.
 3. Mejorar los sprites de la nave del jugador.
+
+## 🔄 Continuará...
+- **Última orden:** "hay problemas en los efectos de particulas que estan hechos checalo" (Revisado y mejorado, pendiente de validación visual por el usuario).

@@ -5,6 +5,7 @@ from assets.colors import *
 from enemies.enemy_manager import EnemyManager
 from enemies.boss import Boss
 from engine.progreso_manager import completar_nivel_1
+from engine.particle_system import ParticleManager
 
 class Estrella:
     def __init__(self, x, y, velocidad, tamano, color):
@@ -126,6 +127,7 @@ class NivelUnoScene:
         self.enemy_manager = EnemyManager()
         self.boss = Boss()
         self.parallax = ParallaxManager(self.ancho_pantalla, self.alto_pantalla)
+        self.particle_manager = ParticleManager()
         self.victoria = False
         self.game_over = False
         
@@ -248,15 +250,19 @@ class NivelUnoScene:
         for b in self.balas_jugador: b.mover()
         for b in self.balas_enemigas: b.mover()
 
+        self.particle_manager.actualizar()
+
         # 4. Colisiones: Balas Jugador -> Enemigos/Jefe
         balas_j_eliminar = []
         for b in self.balas_jugador:
             if self.boss.aparecido and b.obtener_rect().colliderect(self.boss.obtener_rect()):
                 self.boss.recibir_dano(2)
+                self.particle_manager.crear_explosion(b.x, b.y, cantidad=5)
                 balas_j_eliminar.append(b)
                 continue
             for e in self.enemy_manager.enemigos:
                 if b.obtener_rect().colliderect(e.obtener_rect()):
+                    self.particle_manager.crear_explosion(e.x + e.ancho//2, e.y + e.alto//2, cantidad=20)
                     self.enemy_manager.enemigos.remove(e)
                     balas_j_eliminar.append(b)
                     break
@@ -269,14 +275,21 @@ class NivelUnoScene:
         for b in self.balas_enemigas:
             if b.obtener_rect().colliderect(nave_rect):
                 self.nave.recibir_dano(5)
+                self.particle_manager.crear_explosion(b.x, b.y, color=NES_LIGHT_BLUE, cantidad=10)
                 balas_e_eliminar.append(b)
         
         self.balas_enemigas = [b for b in self.balas_enemigas if b not in balas_e_eliminar and b.y < 610]
 
         # 6. Colisiones: Nave -> Enemigos
+        enemigos_eliminar = []
         for e in self.enemy_manager.enemigos:
             if nave_rect.colliderect(e.obtener_rect()):
                 self.nave.recibir_dano(20)
+                self.particle_manager.crear_explosion(e.x + e.ancho//2, e.y + e.alto//2, cantidad=30)
+                enemigos_eliminar.append(e)
+        
+        for e in enemigos_eliminar:
+            if e in self.enemy_manager.enemigos:
                 self.enemy_manager.enemigos.remove(e)
 
         # 7. Verificar Fin del Juego
@@ -312,6 +325,8 @@ class NivelUnoScene:
 
         for b in self.balas_jugador: b.dibujar(pantalla)
         for b in self.balas_enemigas: b.dibujar(pantalla)
+
+        self.particle_manager.dibujar(pantalla)
 
         if self.victoria:
             self.mostrar_victoria(pantalla)

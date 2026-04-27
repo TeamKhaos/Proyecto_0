@@ -21,6 +21,8 @@ class Boss:
         # --- Disparo ---
         self.shoot_timer = 0
         self.shoot_delay = 60 # Dispara cada segundo
+        self.ancho = 200
+        self.alto = 200
 
         self.frames = []
         for i in range(4):

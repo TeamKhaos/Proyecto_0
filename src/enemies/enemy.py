@@ -18,6 +18,8 @@ class Enemy:
         # --- Disparo ---
         self.shoot_delay = random.randint(60, 180) # Disparan cada 1-3 segundos
         self.shoot_timer = 0
+        self.ancho = 64
+        self.alto = 64
 
         # --- Animación ---
         self.frames = []
