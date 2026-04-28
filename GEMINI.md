@@ -1,36 +1,67 @@
-# Registro de Mejoras - Sistema de Audio
+# 🚀 Proyecto de Naves - Documentación de Desarrollo (GEMINI.MD)
 
-Este documento registra las implementaciones realizadas en el sistema de audio para asegurar una experiencia de usuario fluida y persistente.
+Este archivo es el punto de referencia sobre el estado actual, la arquitectura y el registro de cambios del juego. **Regla Crítica:** Actualizar este archivo tras cada funcionalidad nueva o corrección mayor.
 
-## Implementaciones Realizadas
+---
 
-### 1. AudioManager (Gestor Centralizado)
-- **Patrón Singleton:** Garantiza que los sonidos se carguen una sola vez.
-- **Buffer Optimizado:** Configurado a `2048` para eliminar latencia y fallos en Windows.
-- **Persistencia:** Carga y guarda los niveles de volumen en `src/data/data.json`.
-- **Soporte de Canales:** Utiliza `pygame.mixer.find_channel(True)` para permitir múltiples sonidos simultáneos (disparos rápidos, múltiples explosiones).
+## 🛠 Arquitectura del Proyecto
 
-### 2. Integración de Sonidos
-- **Botones:** 
-    - Sonido: `sonido botones.wav`
-    - Activación: Evento `MOUSEBUTTONUP` (al soltar el clic).
-    - Ubicación: Implementado en todas las escenas, incluyendo el **Menú de Pausa** del Nivel 1.
-- **Disparos:**
-    - Sonido: `sonido disparo.wav`
-    - Activación: Inmediata al crear el proyectil en `Level 1`.
-- **Impactos / Explosiones:**
-    - Sonido: `explosion contra nave.wav`
-    - Activación: Al detectar colisión entre proyectil-enemigo, proyectil-nave, nave-enemigo y **balas enemigas contra el jugador**.
+* **`src/main.py`**: Punto de entrada. Gestión de rutas, escalado de pantalla y transformación de coordenadas del mouse.
+* **`src/settings.py`**: Configuraciones globales y utilidades de **Letterboxing** (4:3).
+* **`src/engine/`**: Núcleo del motor.
+    * `scene_manager.py`: Control de transiciones entre niveles y menús.
+    * `progreso_manager.py`: Persistencia en `data.json` y desbloqueo de niveles.
+    * **`audio_manager.py`**: Gestor centralizado (Singleton).
+* **`src/scenes/`**: Lógica de escenas (Nivel 1, Selección de Nivel, Configuración).
+* **`src/ui/`**: Componentes de interfaz y menús.
 
-## Corrección de Bugs
-- **Navegación Fantasma:** Se añadió un retardo de 150ms al cambiar de `Configuración` a `Menú Principal` para evitar que el clic se propague y cierre el juego accidentalmente.
-- **Detección de Pausa:** Se optimizó el bucle de eventos en el menú de pausa para capturar correctamente los clics en "Jugar" y "Volver".
+---
 
-### 3. Música de Fondo
-- **Archivo:** `audio.mp3`
-- **Control:** Métodos `play_music` y `stop_music` añadidos al gestor.
-- **Persistencia:** El volumen de la música se ajusta globalmente desde el menú de configuración.
+## 🔊 Sistema de Audio (Implementado)
 
-## Instrucciones de Mantenimiento
-- Para añadir un nuevo sonido: Colocar el archivo `.wav` en `assets/music/` y llamarlo mediante `AudioManager.play("nombre_archivo")`.
-- Para ajustar el volumen maestro: Utilizar `AudioManager.set_volume(valor)` donde `valor` es de 0.0 a 1.0.
+Se ha establecido un gestor centralizado para una experiencia fluida:
+* **Patrón Singleton:** Los recursos se cargan una sola vez en memoria.
+* **Buffer Optimizado:** Configurado a **2048** para eliminar latencia en Windows.
+* **Soporte de Canales:** Uso de `pygame.mixer.find_channel(True)` para sonidos simultáneos (disparos y explosiones).
+* **Persistencia:** Los niveles de volumen se cargan/guardan en `src/data/data.json`.
+
+### Integración de Sonidos:
+* **Interfaz:** `sonido botones.wav` en evento `MOUSEBUTTONUP` (con retardo de 150ms para evitar navegación fantasma).
+* **Combate:** `sonido disparo.wav` e `explosion contra nave.wav` para colisiones y proyectiles.
+* **Música:** `audio.mp3` con métodos de control global (`play_music`, `stop_music`).
+
+---
+
+## 📊 Estado de Implementación
+
+### Fase 1 a 3: Core y Gameplay [COMPLETADO]
+* **Sistema de HP y UI:** Barras de vida visuales para la Nave.
+* **IA de Enemigos:** Sistema de 3 oleadas gestionado por `EnemyManager`.
+* **Escalado Dinámico:** Implementado Letterboxing y corrección de clic del mouse en pantalla completa/redimensionada.
+* **Visuales:** Fondo parallax de estrellas, nave animada (64x64) y sistema de partículas retro (estilo NES).
+
+### Fase 4: Pulido y Estabilidad [EN PROGRESO]
+* **Estabilidad de Pantalla:** Corregido el error `display Surface quit` al cambiar modos.
+* **Optimización de Colisiones:** Se corrigió la eliminación de elementos mientras se itera la lista en `level_1.py`.
+* **Corrección de Atributos:** Añadidos `ancho` y `alto` a `Enemy` y `Boss` para evitar crashes.
+* **Audio:** Implementación completa del `AudioManager`.
+
+---
+
+## 📜 Convenciones y Mantenimiento
+
+1.  **Colores:** Importar siempre desde `assets.colors`.
+2.  **Colisiones:** Uso preferente de `pygame.Rect`.
+3.  **Progreso:** El guardado automático ocurre al derrotar al Jefe del Nivel 1.
+4.  **Audio:** Para nuevos sonidos, colocar en `assets/music/` y llamar vía `AudioManager.play("nombre")`.
+5.  **Gráficos:** La paleta debe mantenerse fiel al estilo retro/NES.
+
+---
+
+## 📌 Próximos Pasos
+1.  **Nivel 2:** Diseñar nuevos patrones de ataque y tipos de enemigos.
+2.  **Mejora de Sprites:** Refinar el arte de la nave del jugador.
+3.  **Validación de Partículas:** Verificar visualmente la fricción y comportamiento de las partículas cuadradas.
+
+---
+*Última actualización: 27 de abril de 2026*
