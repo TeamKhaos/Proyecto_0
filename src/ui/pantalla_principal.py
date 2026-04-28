@@ -30,7 +30,7 @@ class PantallaPrincipalScene:
 
         # COOLDOWN: Tiempo de seguridad al entrar (para evitar clics fantasma)
         self.tiempo_entrada = pygame.time.get_ticks()
-        self.duracion_bloqueo = 1000 # 1 segundo de seguridad
+        self.duracion_bloqueo = 200 # 1 segundo de seguridad
 
         self.ancho_pantalla = 800
         self.alto_pantalla = 600
