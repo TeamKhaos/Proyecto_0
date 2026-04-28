@@ -37,7 +37,13 @@ class NombreJugadorScene:
                             self.input_text += event.unicode
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:  # Clic izquierdo
+                        pass # El sonido se activará al soltar (UP)
+                
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    if event.button == 1:
                         if self.boton_rect.collidepoint(event.pos) and self.input_text.strip():
+                            from engine.audio_manager import AudioManager
+                            AudioManager.play_boton()
                             # Pasar pantalla como parámetro
                             self.transicion_fundido(pantalla)
                             from engine.scene_manager import SceneManager

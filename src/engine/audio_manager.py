@@ -17,31 +17,28 @@ class AudioManager:
 
     def _init_mixer(self):
         """Inicializa el sistema de sonido y carga los archivos .wav"""
-        if not pygame.mixer.get_init():
-            pygame.mixer.init()
-        
-        # Ruta base relativa a la carpeta 'src' (donde se ejecuta el juego)
-        # Nota: main.py hace os.chdir(src), por lo que assets/ es accesible directamente.
-        base_path = os.path.join("assets", "music")
-        
-        # Mapeo de sonidos requeridos
-        sound_files = {
-            "boton": "sonido botones.wav",
-            "disparo": "sonido disparo.wav",
-            "explosion": "explosion contra nave.wav"
-        }
+        try:
+            # Inicialización optimizada para evitar lag (frecuencia, tamaño de bits, canales, buffer)
+            if not pygame.mixer.get_init():
+                pygame.mixer.pre_init(44100, -16, 2, 512)
+                pygame.mixer.init()
+            
+            base_path = os.path.join("assets", "music")
+            sound_files = {
+                "boton": "sonido botones.wav",
+                "disparo": "sonido disparo.wav",
+                "explosion": "explosion contra nave.wav"
+            }
 
-        for key, filename in sound_files.items():
-            path = os.path.join(base_path, filename)
-            try:
-                # Cargamos el sonido. Pygame maneja internamente la mezcla 
-                # permitiendo múltiples reproducciones simultáneas del mismo objeto Sound.
+            for key, filename in sound_files.items():
+                path = os.path.join(base_path, filename)
                 if os.path.exists(path):
                     self._sounds[key] = pygame.mixer.Sound(path)
+                    print(f"[Audio] Cargado: {filename}")
                 else:
-                    print(f"Advertencia: El archivo de sonido no existe en {path}")
-            except pygame.error as e:
-                print(f"Error: No se pudo cargar el sonido {path}. {e}")
+                    print(f"[Audio] Error: No se encontró {path}")
+        except Exception as e:
+            print(f"[Audio] Error crítico en inicialización: {e}")
 
     def play(self, key):
         """Reproduce el sonido asociado a la clave."""
