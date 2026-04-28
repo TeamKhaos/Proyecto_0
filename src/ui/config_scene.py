@@ -56,6 +56,7 @@ class ConfigScene:
                     AudioManager.play_boton()
                 elif self.boton_volver_rect.collidepoint(evento.pos):
                     AudioManager.play_boton()
+                    pygame.time.delay(150) # Retardo para evitar clic fantasma
                     from ui.pantalla_principal import PantallaPrincipalScene
                     SceneManager.cambiar_escena(PantallaPrincipalScene(self.nombre))
 

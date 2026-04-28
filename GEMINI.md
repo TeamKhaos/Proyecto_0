@@ -14,13 +14,17 @@ Este documento registra las implementaciones realizadas en el sistema de audio p
 - **Botones:** 
     - Sonido: `sonido botones.wav`
     - Activación: Evento `MOUSEBUTTONUP` (al soltar el clic).
-    - Ubicación: Implementado en todas las escenas (`MainMenu`, `PantallaPrincipal`, `SelectLevel`, `Tutorial`, `Config`).
+    - Ubicación: Implementado en todas las escenas, incluyendo el **Menú de Pausa** del Nivel 1.
 - **Disparos:**
     - Sonido: `sonido disparo.wav`
     - Activación: Inmediata al crear el proyectil en `Level 1`.
 - **Impactos / Explosiones:**
     - Sonido: `explosion contra nave.wav`
-    - Activación: Al detectar colisión entre proyectil-enemigo, proyectil-nave o nave-enemigo.
+    - Activación: Al detectar colisión entre proyectil-enemigo, proyectil-nave, nave-enemigo y **balas enemigas contra el jugador**.
+
+## Corrección de Bugs
+- **Navegación Fantasma:** Se añadió un retardo de 150ms al cambiar de `Configuración` a `Menú Principal` para evitar que el clic se propague y cierre el juego accidentalmente.
+- **Detección de Pausa:** Se optimizó el bucle de eventos en el menú de pausa para capturar correctamente los clics en "Jugar" y "Volver".
 
 ### 3. Música de Fondo
 - **Archivo:** `audio.mp3`

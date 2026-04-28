@@ -148,6 +148,24 @@ class NivelUnoScene:
                     self.pausa = not self.pausa
                 elif event.key == pygame.K_j and not self.pausa and not self.victoria and not self.game_over:
                     self.disparar()
+            
+            # Lógica de botones en PAUSA
+            elif event.type == pygame.MOUSEBUTTONUP and self.pausa:
+                if event.button == 1:
+                    # Definir rects de botones de pausa
+                    jugar_rect = pygame.Rect(0, 0, 240, 60)
+                    jugar_rect.center = (self.centro_x, self.centro_y - 20)
+                    volver_rect = pygame.Rect(0, 0, 240, 60)
+                    volver_rect.center = (self.centro_x, self.centro_y + 60)
+
+                    if jugar_rect.collidepoint(event.pos):
+                        AudioManager.play_boton()
+                        self.pausa = False
+                    elif volver_rect.collidepoint(event.pos):
+                        AudioManager.play_boton()
+                        from engine.scene_manager import SceneManager
+                        from scenes.select_level import SelectLevelScene
+                        SceneManager.cambiar_escena(SelectLevelScene(self.nombre))
 
     def disparar(self):
         nueva_bala = Bala(self.nave.x + self.nave.ancho // 2, self.nave.y, direccion=-1, color=NES_YELLOW)
@@ -283,6 +301,7 @@ class NivelUnoScene:
             if b.obtener_rect().colliderect(nave_rect):
                 self.nave.recibir_dano(5)
                 self.particle_manager.crear_explosion(b.x, b.y, color=NES_LIGHT_BLUE, cantidad=10)
+                AudioManager.play_explosion() # Sonido de impacto en jugador
                 balas_e_eliminar.append(b)
         
         self.balas_enemigas = [b for b in self.balas_enemigas if b not in balas_e_eliminar and b.y < 610]
@@ -369,9 +388,14 @@ class NivelUnoScene:
         texto_volver = self.font.render("Volver", True, NES_WHITE)
         pantalla.blit(texto_volver, texto_volver.get_rect(center=self.boton_rect.center))
         
-        if pygame.mouse.get_pressed()[0]:
-            if jugar_rect.collidepoint(mouse_pos): self.pausa = False
-            elif self.boton_rect.collidepoint(mouse_pos):
-                from engine.scene_manager import SceneManager
-                from scenes.select_level import SelectLevelScene
-                SceneManager.cambiar_escena(SelectLevelScene(self.nombre))
+        # Usar eventos para evitar clics fantasma
+        for event in pygame.event.get(pygame.MOUSEBUTTONUP):
+            if event.button == 1:
+                if jugar_rect.collidepoint(event.pos):
+                    AudioManager.play_boton()
+                    self.pausa = False
+                elif self.boton_rect.collidepoint(event.pos):
+                    AudioManager.play_boton()
+                    from engine.scene_manager import SceneManager
+                    from scenes.select_level import SelectLevelScene
+                    SceneManager.cambiar_escena(SelectLevelScene(self.nombre))

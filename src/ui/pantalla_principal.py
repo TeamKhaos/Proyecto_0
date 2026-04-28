@@ -28,6 +28,10 @@ class PantallaPrincipalScene:
         self.font = pygame.font.Font("assets/fonts/upheavtt.ttf", 36)
         self.titulo_font = pygame.font.Font("assets/fonts/upheavtt.ttf", 72)
 
+        # COOLDOWN: Tiempo de seguridad al entrar (para evitar clics fantasma)
+        self.tiempo_entrada = pygame.time.get_ticks()
+        self.duracion_bloqueo = 1000 # 1 segundo de seguridad
+
         self.ancho_pantalla = 800
         self.alto_pantalla = 600
         self.centro_x = self.ancho_pantalla // 2
@@ -60,6 +64,15 @@ class PantallaPrincipalScene:
             rect.center = (self.centro_x, inicio_y + i * (self.boton_alto + self.espacio_entre_botones))
 
     def manejar_eventos(self, eventos, pantalla=None):
+        # Comprobar si estamos en periodo de bloqueo
+        if pygame.time.get_ticks() - self.tiempo_entrada < self.duracion_bloqueo:
+            # Consumir eventos de salida para que no se cierren pero ignorar los clics
+            for event in eventos:
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+            return
+
         for event in eventos:
             if event.type == pygame.QUIT:
                 pygame.quit()
