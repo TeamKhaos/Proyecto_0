@@ -64,23 +64,31 @@ class PantallaPrincipalScene:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            
+            elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 from engine.scene_manager import SceneManager
+                from engine.audio_manager import AudioManager
                 
                 # Clic en el botón de redimensionar (esquina)
                 if self.btn_resize.collidepoint(event.pos):
+                    AudioManager.play_boton()
                     import settings
                     settings.toggle_fullscreen()
                     return
 
                 if self.botones["iniciar"].collidepoint(event.pos):
+                    AudioManager.play_boton()
                     SceneManager.cambiar_escena(SelectLevelScene(self.nombre))
                 elif self.botones["tutorial"].collidepoint(event.pos):
+                    AudioManager.play_boton()
                     from ui.tutorial_scene import TutorialScene
                     SceneManager.cambiar_escena(TutorialScene(self.nombre))
                 elif self.botones["configuración"].collidepoint(event.pos):
+                    AudioManager.play_boton()
                     SceneManager.cambiar_escena(ConfigScene(self.nombre))
                 elif self.botones["salir"].collidepoint(event.pos):
+                    AudioManager.play_boton()
+                    pygame.time.delay(200) # Pequeño delay para que se escuche antes de cerrar
                     pygame.quit()
                     exit()
 

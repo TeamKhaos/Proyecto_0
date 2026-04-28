@@ -1,5 +1,7 @@
 {
     "nivel_1_completado": true,
     "nivel_2_desbloqueado": true,
-    "nivel_3_desbloqueado": false
+    "nivel_3_desbloqueado": false,
+    "volumen_efectos": 0.8,
+    "volumen_musica": 0.8
 }

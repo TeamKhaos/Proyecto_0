@@ -32,7 +32,7 @@ class Boton:
         pantalla.blit(texto_render, texto_rect)
 
     def esta_presionado(self, evento):
-        return evento.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(evento.pos) and not self.bloqueado
+        return evento.type == pygame.MOUSEBUTTONUP and self.rect.collidepoint(evento.pos) and not self.bloqueado
 
 class Estrella:
     def __init__(self):
@@ -70,6 +70,7 @@ class SelectLevelScene:
     def manejar_eventos(self, eventos, pantalla):
         from engine.scene_manager import SceneManager
         from ui.pantalla_principal import PantallaPrincipalScene
+        from engine.audio_manager import AudioManager
 
         for evento in eventos:
             if evento.type == pygame.QUIT:
@@ -77,6 +78,7 @@ class SelectLevelScene:
                 exit()
             for boton in self.botones:
                 if boton.esta_presionado(evento):
+                    AudioManager.play_boton()
                     if boton.texto == "Volver":
                         SceneManager.cambiar_escena(PantallaPrincipalScene(self.nombre_jugador))
                     elif boton.texto == "Nivel 1":

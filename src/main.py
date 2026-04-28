@@ -13,6 +13,11 @@ conf_ventana()
 
 # Crear la ventana inicial
 pantalla_real = crear_pantalla()
+
+# Inicializar Audio DESPUÉS de crear la pantalla
+from engine.audio_manager import AudioManager
+AudioManager.play_boton() # Intento de carga inicial silenciosa
+
 pantalla_virtual = pygame.Surface((V_WIDTH, V_HEIGHT))
 clock = pygame.time.Clock()
 

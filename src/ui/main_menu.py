@@ -24,6 +24,10 @@ class NombreJugadorScene:
                     pygame.quit()
                     exit()
                 elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        from engine.audio_manager import AudioManager
+                        AudioManager.play_boton()
+                    
                     if event.key == pygame.K_RETURN and self.input_text.strip():
                         # Pasar pantalla como parámetro
                         self.nombre_jugador = self.input_text.strip()

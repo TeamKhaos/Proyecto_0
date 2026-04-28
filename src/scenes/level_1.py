@@ -6,6 +6,7 @@ from enemies.enemy_manager import EnemyManager
 from enemies.boss import Boss
 from engine.progreso_manager import completar_nivel_1
 from engine.particle_system import ParticleManager
+from engine.audio_manager import AudioManager
 
 class Estrella:
     def __init__(self, x, y, velocidad, tamano, color):
@@ -134,6 +135,9 @@ class NivelUnoScene:
         self.boton_rect = pygame.Rect(0, 0, 240, 60)
         self.boton_color = NES_BLUE
 
+        # Iniciar música de fondo (asegúrate que audio.mp3 exista en assets/music)
+        AudioManager.play_music("audio.mp3")
+
     def manejar_eventos(self, eventos, pantalla):
         for event in eventos:
             if event.type == pygame.QUIT:
@@ -148,6 +152,7 @@ class NivelUnoScene:
     def disparar(self):
         nueva_bala = Bala(self.nave.x + self.nave.ancho // 2, self.nave.y, direccion=-1, color=NES_YELLOW)
         self.balas_jugador.append(nueva_bala)
+        AudioManager.play_disparo()
 
     def dibujar_barra_vida(self, pantalla, x, y, ancho, alto, vida, max_vida, color_barra):
         pygame.draw.rect(pantalla, NES_WHITE, (x - 2, y - 2, ancho + 4, alto + 4), 2)
@@ -258,11 +263,13 @@ class NivelUnoScene:
             if self.boss.aparecido and b.obtener_rect().colliderect(self.boss.obtener_rect()):
                 self.boss.recibir_dano(2)
                 self.particle_manager.crear_explosion(b.x, b.y, cantidad=5)
+                AudioManager.play_explosion()
                 balas_j_eliminar.append(b)
                 continue
             for e in self.enemy_manager.enemigos:
                 if b.obtener_rect().colliderect(e.obtener_rect()):
                     self.particle_manager.crear_explosion(e.x + e.ancho//2, e.y + e.alto//2, cantidad=20)
+                    AudioManager.play_explosion()
                     self.enemy_manager.enemigos.remove(e)
                     balas_j_eliminar.append(b)
                     break

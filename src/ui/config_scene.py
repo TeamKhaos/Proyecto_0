@@ -2,6 +2,7 @@ import pygame
 from settings import V_WIDTH as WIDTH, V_HEIGHT as HEIGHT
 from engine.scene_manager import SceneManager
 from assets.colors import * 
+from engine.audio_manager import AudioManager
 
 class ConfigScene:
     def __init__(self, nombre):
@@ -10,7 +11,8 @@ class ConfigScene:
         self.titulo_font = pygame.font.Font("assets/fonts/upheavtt.ttf", 60)
         self.titulo = self.titulo_font.render("Configuración", True, NES_YELLOW)
 
-        self.volumen = 0.5 # Valor por defecto, se podría cargar de un JSON
+        # Cargar volumen desde el gestor
+        self.volumen = AudioManager()._volume 
 
         self.boton_ancho = 530
         self.boton_alto = 60
@@ -44,9 +46,16 @@ class ConfigScene:
             elif evento.type == pygame.MOUSEBUTTONDOWN:
                 if self.boton_volumen_mas_rect.collidepoint(evento.pos):
                     self.volumen = min(1.0, self.volumen + 0.1)
+                    AudioManager.set_volume(self.volumen)
+                    AudioManager.set_music_volume(self.volumen) # Opcional: ajustar ambos
+                    AudioManager.play_boton()
                 elif self.boton_volumen_menos_rect.collidepoint(evento.pos):
                     self.volumen = max(0.0, self.volumen - 0.1)
+                    AudioManager.set_volume(self.volumen)
+                    AudioManager.set_music_volume(self.volumen)
+                    AudioManager.play_boton()
                 elif self.boton_volver_rect.collidepoint(evento.pos):
+                    AudioManager.play_boton()
                     from ui.pantalla_principal import PantallaPrincipalScene
                     SceneManager.cambiar_escena(PantallaPrincipalScene(self.nombre))
 

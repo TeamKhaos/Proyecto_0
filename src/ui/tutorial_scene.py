@@ -28,8 +28,10 @@ class TutorialScene:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 if self.boton_volver.collidepoint(event.pos):
+                    from engine.audio_manager import AudioManager
+                    AudioManager.play_boton()
                     from engine.scene_manager import SceneManager
                     from ui.pantalla_principal import PantallaPrincipalScene
                     SceneManager.cambiar_escena(PantallaPrincipalScene(self.nombre))
