@@ -16,6 +16,10 @@ Este archivo sirve como punto de referencia para la IA y los desarrolladores sob
 - `src/ui/`: Componentes de interfaz de usuario.
     - `pantalla_principal.py`: Menú principal con botón de redimensión rápida.
     - `config_scene.py`: Ajustes de volumen.
+- `src/assets/`: Directorio de recursos.
+    - `music/`: Contiene música de fondo (`audio.mp3`) y efectos de sonido (`explosion contra nave.wav`, `sonido botones.wav`, `sonido disparo.wav`).
+    - `images/`: Sprites de naves, enemigos, jefes y UI.
+    - `fonts/`: Fuentes tipográficas (Ej: `upheavtt.ttf`).
 
 ## 🛠 Estado de Implementación (Nivel 1)
 
@@ -51,4 +55,4 @@ Este archivo sirve como punto de referencia para la IA y los desarrolladores sob
 3. Mejorar los sprites de la nave del jugador.
 
 ## 🔄 Continuará...
-- **Última orden:** "hay problemas en los efectos de particulas que estan hechos checalo" (Revisado y mejorado, pendiente de validación visual por el usuario).
+- **Última orden:** "analiza la carpeta de audios y lo añadas en consideracion a la carpeta gemini.md" (Analizados audios en `src/assets/music/` y `src/assets/sounds/`, documentación actualizada).
