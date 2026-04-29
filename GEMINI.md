@@ -40,11 +40,21 @@ Se ha establecido un gestor centralizado para una experiencia fluida:
 * **Escalado Dinámico:** Implementado Letterboxing y corrección de clic del mouse en pantalla completa/redimensionada.
 * **Visuales:** Fondo parallax de estrellas, nave animada (64x64) y sistema de partículas retro (estilo NES).
 
-### Fase 4: Pulido y Estabilidad [EN PROGRESO]
+### Fase 4: Pulido y Estabilidad [COMPLETADO]
 * **Estabilidad de Pantalla:** Corregido el error `display Surface quit` al cambiar modos.
 * **Optimización de Colisiones:** Se corrigió la eliminación de elementos mientras se itera la lista en `level_1.py`.
-* **Corrección de Atributos:** Añadidos `ancho` y `alto` a `Enemy` y `Boss` para evitar crashes.
 * **Audio:** Implementación completa del `AudioManager`.
+* **IA Avanzada:** 
+    * `Enemy` ahora soporta tipos: `zigzag`, `tracker` (persigue al jugador) y `kamikaze`.
+    * `Boss` ahora tiene patrones: `Fan`, `Spiral` y `Targeted`, que cambian según su vida.
+    * `Bala` mejorada para soportar movimiento vectorial (vx, vy).
+
+### Fase 5: Expansión de Contenido [COMPLETADO]
+* **Nivel 2:** Implementado con 5 oleadas más rápidas y un jefe con 200 HP y ataques acelerados.
+* **Nivel 3:** Nivel final con estética de fuego, jefe de 350 HP y sistema de Power-ups.
+* **Power-ups:** Drop raro (10%) de mejora de "Escopeta" que otorga triple disparo temporal.
+* **Sistema de Progresión:** Desbloqueo automático de niveles y persistencia en JSON.
+* **Créditos Finales:** Escena de scroll vertical que se activa al completar el Nivel 3.
 
 ---
 
@@ -52,16 +62,16 @@ Se ha establecido un gestor centralizado para una experiencia fluida:
 
 1.  **Colores:** Importar siempre desde `assets.colors`.
 2.  **Colisiones:** Uso preferente de `pygame.Rect`.
-3.  **Progreso:** El guardado automático ocurre al derrotar al Jefe del Nivel 1.
+3.  **Botones:** Tamaño estándar de **280x60px** con `font_pquena` para consistencia.
 4.  **Audio:** Para nuevos sonidos, colocar en `assets/music/` y llamar vía `AudioManager.play("nombre")`.
 5.  **Gráficos:** La paleta debe mantenerse fiel al estilo retro/NES.
 
 ---
 
 ## 📌 Próximos Pasos
-1.  **Nivel 2:** Diseñar nuevos patrones de ataque y tipos de enemigos.
-2.  **Mejora de Sprites:** Refinar el arte de la nave del jugador.
-3.  **Validación de Partículas:** Verificar visualmente la fricción y comportamiento de las partículas cuadradas.
+1.  **Optimización:** Refinar el manejo de memoria en la carga de imágenes.
+2.  **Nuevas Naves:** Implementar diferentes skins o tipos de naves para el jugador.
+3.  **Logros:** Añadir un sistema de medallas por tiempo o daño recibido.
 
 ---
-*Última actualización: 27 de abril de 2026*
+*Última actualización: 28 de abril de 2026*

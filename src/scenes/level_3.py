@@ -179,8 +179,8 @@ class NivelTresScene:
         btn_menu = pygame.Rect(0, 0, 280, 60); btn_menu.center = (self.centro_x, self.centro_y + 80)
         if btn_menu.collidepoint(pos):
             AudioManager.play_boton()
-            from engine.scene_manager import SceneManager; from scenes.select_level import SelectLevelScene
-            SceneManager.cambiar_escena(SelectLevelScene(self.nombre))
+            from engine.scene_manager import SceneManager; from scenes.credits_scene import CreditsScene
+            SceneManager.cambiar_escena(CreditsScene(self.nombre))
 
     def disparar(self):
         cx = self.nave.x + self.nave.ancho // 2
