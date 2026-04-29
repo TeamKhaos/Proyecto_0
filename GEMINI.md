@@ -40,11 +40,19 @@ Se ha establecido un gestor centralizado para una experiencia fluida:
 * **Escalado Dinámico:** Implementado Letterboxing y corrección de clic del mouse en pantalla completa/redimensionada.
 * **Visuales:** Fondo parallax de estrellas, nave animada (64x64) y sistema de partículas retro (estilo NES).
 
-### Fase 4: Pulido y Estabilidad [EN PROGRESO]
+### Fase 4: Pulido y Estabilidad [COMPLETADO]
 * **Estabilidad de Pantalla:** Corregido el error `display Surface quit` al cambiar modos.
 * **Optimización de Colisiones:** Se corrigió la eliminación de elementos mientras se itera la lista en `level_1.py`.
-* **Corrección de Atributos:** Añadidos `ancho` y `alto` a `Enemy` y `Boss` para evitar crashes.
 * **Audio:** Implementación completa del `AudioManager`.
+* **IA Avanzada:** 
+    * `Enemy` ahora soporta tipos: `zigzag`, `tracker` (persigue al jugador) y `kamikaze`.
+    * `Boss` ahora tiene patrones: `Fan`, `Spiral` y `Targeted`, que cambian según su vida.
+    * `Bala` mejorada para soportar movimiento vectorial (vx, vy).
+
+### Fase 5: Expansión de Contenido [EN PROGRESO]
+* **Nivel 2:** Implementado con 5 oleadas más rápidas y un jefe con 200 HP y ataques acelerados.
+* **Sistema de Progresión:** Desbloqueo automático del Nivel 2 al ganar el Nivel 1, y Nivel 3 al ganar el Nivel 2.
+* **Visuales Nivel 2:** Fondo parallax con tonos azules y morados.
 
 ---
 
@@ -59,9 +67,9 @@ Se ha establecido un gestor centralizado para una experiencia fluida:
 ---
 
 ## 📌 Próximos Pasos
-1.  **Nivel 2:** Diseñar nuevos patrones de ataque y tipos de enemigos.
-2.  **Mejora de Sprites:** Refinar el arte de la nave del jugador.
-3.  **Validación de Partículas:** Verificar visualmente la fricción y comportamiento de las partículas cuadradas.
+1.  **Nivel 3:** Diseñar el nivel final con mecánicas de disparos aún más complejas.
+2.  **Mejora de Sprites:** Refinar el arte de la nave del jugador y enemigos.
+3.  **Sistema de Power-ups:** Implementar mejoras temporales para la nave (escudos, ráfagas).
 
 ---
-*Última actualización: 27 de abril de 2026*
+*Última actualización: 28 de abril de 2026*

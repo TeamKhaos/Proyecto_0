@@ -3,6 +3,8 @@ import pygame
 import random
 from assets.colors import *
 from scenes.level_1 import NivelUnoScene
+from scenes.level_2 import NivelDosScene
+from scenes.level_3 import NivelTresScene
 from engine.progreso_manager import cargar_progreso
 
 ANCHO_PANTALLA = 800
@@ -83,8 +85,10 @@ class SelectLevelScene:
                         SceneManager.cambiar_escena(PantallaPrincipalScene(self.nombre_jugador))
                     elif boton.texto == "Nivel 1":
                         SceneManager.cambiar_escena(NivelUnoScene(self.nombre_jugador))
-                    elif not boton.bloqueado:
-                        print(f"Ir a {boton.texto}")
+                    elif boton.texto == "Nivel 2" and not boton.bloqueado:
+                        SceneManager.cambiar_escena(NivelDosScene(self.nombre_jugador))
+                    elif boton.texto == "Nivel 3" and not boton.bloqueado:
+                        SceneManager.cambiar_escena(NivelTresScene(self.nombre_jugador))
 
     def actualizar(self):
         for estrella in self.estrellas:

@@ -3,25 +3,32 @@ from assets.colors import *
 
 class Bala:
     """Representa un proyectil en el juego, usado tanto por jugadores como por enemigos."""
-    def __init__(self, x, y, velocidad=7, direccion=-1, color=NES_WHITE):
+    def __init__(self, x, y, velocidad=7, direccion=-1, color=NES_WHITE, vx=0, vy=None):
         """
         Inicializa la bala.
         :param x: Posición X inicial.
         :param y: Posición Y inicial.
-        :param velocidad: Rapidez de movimiento.
-        :param direccion: -1 para subir (jugador), 1 para bajar (enemigo).
+        :param velocidad: Rapidez de movimiento (si vy no se especifica).
+        :param direccion: -1 para subir (jugador), 1 para bajar (enemigo). Usado si vy es None.
         :param color: Color del proyectil.
+        :param vx: Velocidad horizontal.
+        :param vy: Velocidad vertical. Si es None, se calcula con velocidad * direccion.
         """
         self.x = x
         self.y = y
-        self.velocidad = velocidad
-        self.direccion = direccion
+        self.vx = vx
+        if vy is None:
+            self.vy = velocidad * direccion
+        else:
+            self.vy = vy
+            
         self.color = color
         self.radio = 4
 
     def mover(self):
-        # Actualiza la posición basándose en la dirección (1 o -1)
-        self.y += (self.velocidad * self.direccion)
+        # Actualiza la posición basándose en las velocidades
+        self.x += self.vx
+        self.y += self.vy
 
     def dibujar(self, pantalla):
         # Dibuja la bala como un círculo

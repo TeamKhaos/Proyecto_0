@@ -33,3 +33,14 @@ def completar_nivel_1():
     progreso["nivel_1_completado"] = True
     progreso["nivel_2_desbloqueado"] = True
     guardar_progreso(progreso)
+
+def completar_nivel_2():
+    progreso = cargar_progreso()
+    progreso["nivel_2_completado"] = True
+    progreso["nivel_3_desbloqueado"] = True
+    guardar_progreso(progreso)
+
+def completar_nivel_3():
+    progreso = cargar_progreso()
+    progreso["nivel_3_completado"] = True
+    guardar_progreso(progreso)

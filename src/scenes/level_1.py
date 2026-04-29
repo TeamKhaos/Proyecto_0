@@ -125,8 +125,8 @@ class NivelUnoScene:
         self.balas_jugador = []  
         self.balas_enemigas = []
 
-        self.enemy_manager = EnemyManager()
-        self.boss = Boss()
+        self.enemy_manager = EnemyManager(nivel=1, target=self.nave)
+        self.boss = Boss(target=self.nave)
         self.parallax = ParallaxManager(self.ancho_pantalla, self.alto_pantalla)
         self.particle_manager = ParticleManager()
         self.victoria = False
@@ -212,27 +212,9 @@ class NivelUnoScene:
         texto = self.titulo_font.render("GAME OVER", True, NES_RED)
         pantalla.blit(texto, texto.get_rect(center=(self.centro_x, self.centro_y - 100)))
         
-        mouse_pos = pygame.mouse.get_pos()
-        
-        # Botón REINTENTAR
-        reintentar_rect = pygame.Rect(0, 0, 240, 60)
-        reintentar_rect.center = (self.centro_x, self.centro_y)
-        hover_r = reintentar_rect.collidepoint(mouse_pos)
-        color_r = NES_LIGHT_BLUE if hover_r else NES_BLUE
-        pygame.draw.rect(pantalla, color_r, reintentar_rect, border_radius=10)
-        if hover_r: pygame.draw.rect(pantalla, NES_WHITE, reintentar_rect, 3, border_radius=10)
-        pantalla.blit(self.font_pquena.render("REINTENTAR", True, NES_WHITE), 
-                      self.font_pquena.render("REINTENTAR", True, NES_WHITE).get_rect(center=reintentar_rect.center))
-
-        # Botón MENU
-        menu_rect = pygame.Rect(0, 0, 240, 60)
-        menu_rect.center = (self.centro_x, self.centro_y + 80)
-        hover_m = menu_rect.collidepoint(mouse_pos)
-        color_m = NES_LIGHT_BLUE if hover_m else NES_BLUE
-        pygame.draw.rect(pantalla, color_m, menu_rect, border_radius=10)
-        if hover_m: pygame.draw.rect(pantalla, NES_WHITE, menu_rect, 3, border_radius=10)
-        pantalla.blit(self.font_pquena.render("VOLVER AL MENU", True, NES_WHITE), 
-                      self.font_pquena.render("VOLVER AL MENU", True, NES_WHITE).get_rect(center=menu_rect.center))
+        # Botones estandarizados
+        self.dibujar_boton(pantalla, "REINTENTAR", self.centro_y)
+        self.dibujar_boton(pantalla, "VOLVER AL MENU", self.centro_y + 80)
 
     def mostrar_victoria(self, pantalla):
         overlay = pygame.Surface((self.ancho_pantalla, self.alto_pantalla), pygame.SRCALPHA)
@@ -245,17 +227,19 @@ class NivelUnoScene:
         mensaje = self.font_pquena.render("Felicidades haz pasado el nivel 1", True, NES_WHITE)
         pantalla.blit(mensaje, mensaje.get_rect(center=(self.centro_x, self.centro_y - 30)))
 
-        # Botón Volver
-        btn_menu = pygame.Rect(0, 0, 240, 60)
-        btn_menu.center = (self.centro_x, self.centro_y + 80)
+        self.dibujar_boton(pantalla, "VOLVER AL MENU", self.centro_y + 80)
+
+    def dibujar_boton(self, pantalla, texto, y_centro):
+        rect = pygame.Rect(0, 0, 280, 60)
+        rect.center = (self.centro_x, y_centro)
         mouse_pos = pygame.mouse.get_pos()
-        hover = btn_menu.collidepoint(mouse_pos)
+        hover = rect.collidepoint(mouse_pos)
         color = NES_LIGHT_BLUE if hover else NES_BLUE
-        pygame.draw.rect(pantalla, color, btn_menu, border_radius=10)
-        if hover: pygame.draw.rect(pantalla, NES_WHITE, btn_menu, 3, border_radius=10)
+        pygame.draw.rect(pantalla, color, rect, border_radius=10)
+        if hover: pygame.draw.rect(pantalla, NES_WHITE, rect, 3, border_radius=10)
         
-        texto_volver = self.font_pquena.render("VOLVER AL MENU", True, NES_WHITE)
-        pantalla.blit(texto_volver, texto_volver.get_rect(center=btn_menu.center))
+        txt_render = self.font_pquena.render(texto, True, NES_WHITE)
+        pantalla.blit(txt_render, txt_render.get_rect(center=rect.center))
 
     def actualizar(self):
         if self.pausa or self.victoria or self.game_over: return
@@ -383,24 +367,6 @@ class NivelUnoScene:
         pausa_texto = self.font.render("PAUSA", True, NES_RED)
         pantalla.blit(pausa_texto, pausa_texto.get_rect(center=(self.centro_x, self.centro_y - 100)))
         
-        mouse_pos = pygame.mouse.get_pos()
-        
-        # Botón Jugar
-        jugar_rect = pygame.Rect(0, 0, 240, 60)
-        jugar_rect.center = (self.centro_x, self.centro_y - 20)
-        hover_j = jugar_rect.collidepoint(mouse_pos)
-        color_j = NES_LIGHT_BLUE if hover_j else NES_BLUE
-        pygame.draw.rect(pantalla, color_j, jugar_rect, border_radius=10)
-        if hover_j: pygame.draw.rect(pantalla, NES_WHITE, jugar_rect, 3, border_radius=10)
-        texto_jugar = self.font.render("Jugar", True, NES_WHITE)
-        pantalla.blit(texto_jugar, texto_jugar.get_rect(center=jugar_rect.center))
-        
-        # Botón Volver
-        volver_rect = pygame.Rect(0, 0, 240, 60)
-        volver_rect.center = (self.centro_x, self.centro_y + 60)
-        hover_v = volver_rect.collidepoint(mouse_pos)
-        color_v = NES_LIGHT_BLUE if hover_v else NES_BLUE
-        pygame.draw.rect(pantalla, color_v, volver_rect, border_radius=10)
-        if hover_v: pygame.draw.rect(pantalla, NES_WHITE, volver_rect, 3, border_radius=10)
-        texto_volver = self.font.render("Volver", True, NES_WHITE)
-        pantalla.blit(texto_volver, texto_volver.get_rect(center=volver_rect.center))
+        # Botones estandarizados
+        self.dibujar_boton(pantalla, "JUGAR", self.centro_y - 20)
+        self.dibujar_boton(pantalla, "VOLVER AL MENU", self.centro_y + 60)
