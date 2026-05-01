@@ -5,5 +5,17 @@
     "volumen_efectos": 0.20000000000000015,
     "volumen_musica": 0.20000000000000015,
     "nivel_2_completado": true,
-    "nivel_3_completado": true
+    "nivel_3_completado": true,
+    "nave_seleccionada": "mejora3",
+    "naves_desbloqueadas": [
+        "default",
+        "mejora1",
+        "mejora2",
+        "mejora3"
+    ],
+    "logros": {
+        "nivel_1": "ORO",
+        "nivel_2": "PLATA",
+        "nivel_3": "BRONCE"
+    }
 }

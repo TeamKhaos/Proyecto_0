@@ -40,12 +40,12 @@ class PantallaPrincipalScene:
         self.estrellas = [Estrella(self.ancho_pantalla, self.alto_pantalla) for _ in range(100)]
 
         self.boton_ancho = 320
-        self.boton_alto = 60
-        self.espacio_entre_botones = 30
+        self.boton_alto = 55
+        self.espacio_entre_botones = 25
 
         self.botones = {
             "iniciar": pygame.Rect(0, 0, self.boton_ancho, self.boton_alto),
-            "tutorial": pygame.Rect(0, 0, self.boton_ancho, self.boton_alto),
+            "hangar": pygame.Rect(0, 0, self.boton_ancho, self.boton_alto),
             "configuración": pygame.Rect(0, 0, self.boton_ancho, self.boton_alto),
             "salir": pygame.Rect(0, 0, self.boton_ancho, self.boton_alto),
         }
@@ -56,9 +56,8 @@ class PantallaPrincipalScene:
         self._posicionar_botones()
 
     def _posicionar_botones(self):
-        # ... (código anterior)
-        total_altura = len(self.botones) * self.boton_alto + (len(self.botones) - 1) * self.espacio_entre_botones
-        inicio_y = (self.alto_pantalla // 2 + 50) - total_altura // 2
+        # Ajustamos para que el menú empiece más abajo y tenga más aire
+        inicio_y = 250 
 
         for i, rect in enumerate(self.botones.values()):
             rect.center = (self.centro_x, inicio_y + i * (self.boton_alto + self.espacio_entre_botones))
@@ -92,10 +91,10 @@ class PantallaPrincipalScene:
                 if self.botones["iniciar"].collidepoint(event.pos):
                     AudioManager.play_boton()
                     SceneManager.cambiar_escena(SelectLevelScene(self.nombre))
-                elif self.botones["tutorial"].collidepoint(event.pos):
+                elif self.botones["hangar"].collidepoint(event.pos):
                     AudioManager.play_boton()
-                    from ui.tutorial_scene import TutorialScene
-                    SceneManager.cambiar_escena(TutorialScene(self.nombre))
+                    from ui.hangar_scene import HangarScene
+                    SceneManager.cambiar_escena(HangarScene(self.nombre))
                 elif self.botones["configuración"].collidepoint(event.pos):
                     AudioManager.play_boton()
                     SceneManager.cambiar_escena(ConfigScene(self.nombre))

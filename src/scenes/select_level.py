@@ -61,10 +61,11 @@ class SelectLevelScene:
         progreso = cargar_progreso()
 
         self.botones = [
-            Boton("Nivel 1", 300, 200, 200, 60),
-            Boton("Nivel 2", 300, 280, 200, 60, bloqueado=not progreso["nivel_2_desbloqueado"]),
-            Boton("Nivel 3", 300, 360, 200, 60, bloqueado=not progreso["nivel_3_desbloqueado"]),
-            Boton("Volver", 300, 440, 200, 60)
+            Boton("Tutorial", 300, 180, 200, 60), # Añadido arriba
+            Boton("Nivel 1", 300, 255, 200, 60),
+            Boton("Nivel 2", 300, 330, 200, 60, bloqueado=not progreso["nivel_2_desbloqueado"]),
+            Boton("Nivel 3", 300, 405, 200, 60, bloqueado=not progreso["nivel_3_desbloqueado"]),
+            Boton("Volver", 300, 480, 200, 60)
         ]
 
         self.estrellas = [Estrella() for _ in range(50)]
@@ -83,6 +84,9 @@ class SelectLevelScene:
                     AudioManager.play_boton()
                     if boton.texto == "Volver":
                         SceneManager.cambiar_escena(PantallaPrincipalScene(self.nombre_jugador))
+                    elif boton.texto == "Tutorial":
+                        from ui.tutorial_scene import InteractiveTutorialScene
+                        SceneManager.cambiar_escena(InteractiveTutorialScene(self.nombre_jugador))
                     elif boton.texto == "Nivel 1":
                         SceneManager.cambiar_escena(NivelUnoScene(self.nombre_jugador))
                     elif boton.texto == "Nivel 2" and not boton.bloqueado:

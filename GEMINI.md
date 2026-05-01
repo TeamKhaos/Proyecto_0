@@ -56,6 +56,24 @@ Se ha establecido un gestor centralizado para una experiencia fluida:
 * **Sistema de Progresión:** Desbloqueo automático de niveles y persistencia en JSON.
 * **Créditos Finales:** Escena de scroll vertical que se activa al completar el Nivel 3.
 
+### Fase 6: Refactorización y Nuevas Funcionalidades [COMPLETADO]
+* **AssetManager:** Centralización de recursos para optimizar memoria (se cargan una sola vez).
+* **Arquitectura Base:** Creación de `BaseLevelScene` para eliminar redundancia entre niveles.
+* **Hangar:** Nueva escena para seleccionar naves desbloqueadas.
+* **Skins:** Implementación de 4 tipos de naves (Default + 3 Mejoras) con visuales únicos.
+* **Sistema de Logros:** Registro de medallas (Bronce, Plata, Oro) basado en tiempo y daño recibido.
+
+### Fase 7: Experiencia de Usuario y Pulido [COMPLETADO]
+* **Tutorial Interactivo:** Sustitución del tutorial estático por un nivel guiado con scripts de texto, práctica de movimiento y combate real.
+* **Optimización de UI:** Rediseño del Menú Principal con espaciado mejorado y layout balanceado para evitar superposiciones.
+* **Flujo de Navegación:** Reubicación del Tutorial a la pantalla de Selección de Niveles para un acceso más intuitivo.
+
+### Fase 8: Fidelidad Visual y Efectos Especiales [COMPLETADO]
+* **Sistema de Ghosting RGB:** Implementación de estelas cromáticas que siguen a la nave del jugador según su vector de movimiento.
+* **Proyectiles Pro (Glow & Trail):** Rediseño de balas con núcleos brillantes, auras de color y estelas de trayectoria para mayor impacto visual.
+* **Parallax Galáctico:** Mejora del fondo con "Objetos Espaciales" (planetas y nebulosas procedimentales) que añaden profundidad y variedad a cada nivel.
+* **Explosiones Dinámicas:** Refinamiento del sistema de partículas con desvanecimiento alfa, varianza de tamaño y formas circulares.
+
 ---
 
 ## 📜 Convenciones y Mantenimiento
@@ -65,13 +83,14 @@ Se ha establecido un gestor centralizado para una experiencia fluida:
 3.  **Botones:** Tamaño estándar de **280x60px** con `font_pquena` para consistencia.
 4.  **Audio:** Para nuevos sonidos, colocar en `assets/music/` y llamar vía `AudioManager.play("nombre")`.
 5.  **Gráficos:** La paleta debe mantenerse fiel al estilo retro/NES.
+6.  **Escenas de Nivel:** Heredar siempre de `BaseLevelScene` para mantener consistencia.
 
 ---
 
 ## 📌 Próximos Pasos
-1.  **Optimización:** Refinar el manejo de memoria en la carga de imágenes.
-2.  **Nuevas Naves:** Implementar diferentes skins o tipos de naves para el jugador.
-3.  **Logros:** Añadir un sistema de medallas por tiempo o daño recibido.
+1.  **Tienda:** Implementar un sistema de puntos/monedas para comprar mejoras en lugar de desbloqueo directo.
+2.  **Más Enemigos:** Añadir variedad de enemigos con patrones de ataque más complejos.
+3.  **Partículas:** Mejorar el sistema de partículas para efectos de propulsión de la nave.
 
 ---
-*Última actualización: 28 de abril de 2026*
+*Última actualización: 1 de mayo de 2026*
