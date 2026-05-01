@@ -52,14 +52,28 @@ class EnemyManager:
                 
                 velocidad = (2 if self.nivel == 1 else 3) + (self.oleada_actual * 0.5)
                 
-                # Elegir IA según el nivel y oleada
+                # Elegir IA y Color según el nivel
                 ia_type = "zigzag"
-                if self.nivel == 2:
-                    rand = random.random()
-                    if rand < 0.4: ia_type = "tracker"
-                    elif rand < 0.6: ia_type = "kamikaze"
+                tint = None
                 
-                nuevo = Enemy(random.randint(50, 750), -50, velocidad=velocidad, ia_type=ia_type, target=self.target)
+                if self.nivel == 1:
+                    if self.oleada_actual > 2:
+                        ia_type = random.choice(["zigzag", "tracker"])
+                        tint = (255, 100, 100) if ia_type == "tracker" else None
+                
+                elif self.nivel == 2:
+                    ia_type = random.choice(["zigzag", "tracker", "kamikaze"])
+                    if ia_type == "tracker": tint = (100, 255, 100)
+                    elif ia_type == "kamikaze": tint = (255, 255, 100)
+                    else: tint = (100, 100, 255)
+                
+                elif self.nivel == 3:
+                    ia_type = random.choice(["zigzag", "tracker", "kamikaze", "circular"])
+                    if ia_type == "circular": tint = (255, 100, 255)
+                    elif ia_type == "kamikaze": tint = (255, 50, 50)
+                    else: tint = (200, 200, 200)
+                
+                nuevo = Enemy(random.randint(50, 750), -50, velocidad=velocidad, ia_type=ia_type, target=self.target, tint_color=tint)
                 self.enemigos.append(nuevo)
 
         # Mover enemigos y manejar disparos

@@ -3,22 +3,25 @@ import math
 import random
 from enemies.bala import Bala
 from assets.colors import NES_RED
+from engine.asset_manager import AssetManager
 
 class Enemy:
-    def __init__(self, x, y, velocidad=2, ia_type="zigzag", target=None):
+    def __init__(self, x, y, velocidad=2, ia_type="zigzag", target=None, tint_color=None):
         self.x = x
         self.y = y
         self.velocidad = velocidad
         self.ia_type = ia_type
         self.target = target
+        self.tint_color = tint_color # Color para diferenciar tipos
         
         # --- IA y Movimiento ---
-        self.offset_x = random.uniform(0, math.pi * 2) # Para que no todos se muevan igual
-        self.amplitud = random.randint(20, 50)
-        self.frecuencia = 0.05
+        self.offset_x = random.uniform(0, math.pi * 2)
+        self.amplitud = random.randint(30, 80)
+        self.frecuencia = 0.03
+        self.angulo = 0 # Para movimientos circulares
         
         # --- Disparo ---
-        self.shoot_delay = random.randint(60, 180) # Disparan cada 1-3 segundos
+        self.shoot_delay = random.randint(60, 180)
         self.shoot_timer = 0
         self.ancho = 64
         self.alto = 64
@@ -27,11 +30,15 @@ class Enemy:
         self.frames = []
         try:
             for i in range(4):
-                frame = pygame.image.load(f"assets/images/enemies/Enemy{i}.png").convert_alpha()
-                frame = pygame.transform.scale(frame, (64, 64))
-                self.frames.append(frame)
+                img = AssetManager.get_image(f"assets/images/enemies/Enemy{i}.png", (64, 64))
+                # Aplicar tintado si existe
+                if self.tint_color:
+                    img_tintada = img.copy()
+                    img_tintada.fill((*self.tint_color, 255), special_flags=pygame.BLEND_RGBA_MULT)
+                    self.frames.append(img_tintada)
+                else:
+                    self.frames.append(img)
         except:
-            # Fallback
             self.frames = [None]
 
         self.frame_actual = 0
@@ -40,23 +47,25 @@ class Enemy:
 
     def mover(self):
         if self.ia_type == "zigzag":
-            # Movimiento vertical constante
             self.y += self.velocidad
-            # Movimiento horizontal en zigzag (senoidal)
-            self.x += math.sin(self.y * self.frecuencia + self.offset_x) * 2
+            self.x += math.sin(self.y * self.frecuencia + self.offset_x) * 3
+        
         elif self.ia_type == "tracker":
-            # Persigue horizontalmente al jugador mientras baja
-            self.y += self.velocidad
+            self.y += self.velocidad * 0.8
             if self.target:
-                target_center_x = self.target.x + self.target.ancho // 2
-                enemy_center_x = self.x + self.ancho // 2
-                if enemy_center_x < target_center_x:
-                    self.x += 1.5
-                elif enemy_center_x > target_center_x:
-                    self.x -= 1.5
+                dist_x = (self.target.x + 32) - (self.x + 32)
+                self.x += (dist_x * 0.02) # Persecución suave
+        
         elif self.ia_type == "kamikaze":
-            # Baja rápido directamente
-            self.y += self.velocidad * 1.5
+            self.y += self.velocidad * 2
+            # Movimiento directo y rápido hacia abajo con ligero temblor
+            self.x += random.uniform(-1, 1)
+
+        elif self.ia_type == "circular":
+            self.y += self.velocidad * 0.5
+            self.angulo += 0.05
+            self.x += math.cos(self.angulo) * 5
+            self.y += math.sin(self.angulo) * 2
 
     def puede_disparar(self):
         self.shoot_timer += 1

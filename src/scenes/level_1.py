@@ -13,5 +13,11 @@ class NivelUnoScene(BaseLevelScene):
         from scenes.select_level import SelectLevelScene
         SceneManager.cambiar_escena(SelectLevelScene(self.nombre))
 
-    def completar_nivel_logica(self):
-        completar_nivel_1()
+    def configurar_boss(self):
+        self.boss.max_vida = 150
+        self.boss.vida = 150
+        self.boss.tint_color = (255, 100, 100) # Rojo para el primer jefe
+        # Recargar frames con el nuevo tinte
+        self.boss.__init__(target=self.nave, tint_color=self.boss.tint_color)
+        self.boss.max_vida = 150
+        self.boss.vida = 150

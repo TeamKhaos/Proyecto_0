@@ -55,3 +55,18 @@ class Bala:
     def obtener_rect(self):
         # Devuelve el rectángulo de colisión
         return pygame.Rect(self.x - self.radio, self.y - self.radio, self.radio * 2, self.radio * 2)
+
+class BalaGranada(Bala):
+    """Proyectil especial que explota al tocar el suelo."""
+    def __init__(self, x, y, velocidad=5, color=NES_ORANGE):
+        super().__init__(x, y, velocidad=velocidad, direccion=1, color=color)
+        self.radio = 18 # Proyectil gigante
+        self.explotada = False
+
+    def mover(self):
+        super().mover()
+        # Si toca el borde inferior (aprox 600), marca para explotar
+        if self.y >= 580 and not self.explotada:
+            self.explotada = True
+            return True # Señal para el manager de que debe generar fragmentos
+        return False

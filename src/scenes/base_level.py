@@ -1,5 +1,6 @@
 import pygame
 import random
+import math
 from assets.colors import *
 from engine.player import Nave
 from engine.background import ParallaxManager
@@ -7,7 +8,8 @@ from engine.particle_system import ParticleManager
 from engine.audio_manager import AudioManager
 from engine.asset_manager import AssetManager
 from engine.powerup import PowerUp
-from enemies.bala import Bala
+from engine.visual_effects import ScreenShake, HealthBar
+from enemies.bala import Bala, BalaGranada
 from enemies.enemy_manager import EnemyManager
 from enemies.boss import Boss
 
@@ -17,16 +19,21 @@ class BaseLevelScene:
         self.nivel = nivel
         self.meta_oleadas = meta_oleadas
         
+        self.ancho_pantalla = 800
+        self.alto_pantalla = 600
+        self.centro_x = self.ancho_pantalla // 2
+        self.centro_y = self.alto_pantalla // 2
+
+        # Efectos Visuales
+        self.shake = ScreenShake()
+        self.hb_jugador = HealthBar(20, 45, 200, 15, NES_RED)
+        self.hb_boss = HealthBar(self.centro_x - 150, 45, 300, 20, NES_ORANGE)
+
         # Fuentes (Optimizado con AssetManager)
         self.font = AssetManager.get_font("assets/fonts/upheavtt.ttf", 36)
         self.font_pquena = AssetManager.get_font("assets/fonts/upheavtt.ttf", 20)
         self.font_mini = AssetManager.get_font("assets/fonts/upheavtt.ttf", 16)
         self.titulo_font = AssetManager.get_font("assets/fonts/upheavtt.ttf", 64)
-
-        self.ancho_pantalla = 800
-        self.alto_pantalla = 600
-        self.centro_x = self.ancho_pantalla // 2
-        self.centro_y = self.alto_pantalla // 2
 
         # Cargar skin seleccionada desde el progreso
         from engine.progreso_manager import cargar_progreso
@@ -56,7 +63,6 @@ class BaseLevelScene:
         AudioManager.play_music("audio.mp3")
 
     def configurar_boss(self):
-        # Sobrescribir en subclases o configurar según nivel
         if self.nivel == 1:
             self.boss.vida = 100
             self.boss.max_vida = 100
@@ -121,23 +127,21 @@ class BaseLevelScene:
             self.balas_jugador.append(Bala(cx, cy, direccion=-1, color=NES_YELLOW))
         AudioManager.play_disparo()
 
-    def dibujar_barra_vida(self, pantalla, x, y, ancho, alto, vida, max_vida, color_barra):
-        pygame.draw.rect(pantalla, NES_WHITE, (x - 2, y - 2, ancho + 4, alto + 4), 2)
-        ancho_actual = (vida / max_vida) * ancho if max_vida > 0 else 0
-        pygame.draw.rect(pantalla, color_barra, (x, y, ancho_actual, alto))
-
     def actualizar(self):
         if self.pausa or self.victoria or self.game_over: return
 
         self.parallax.actualizar()
+        self.shake.actualizar()
 
         if self.boss.derrotado:
             self.completar_nivel_logica()
             self.victoria = True
+            self.shake.activar(30, 8)
             return
         
         if self.nave.vida <= 0:
             self.game_over = True
+            self.shake.activar(20, 5)
             return
 
         self.nave.mover(pygame.key.get_pressed())
@@ -147,21 +151,43 @@ class BaseLevelScene:
 
         if status == "BOSS_TIME" and not self.boss.aparecido:
             self.boss.aparecer()
+            self.shake.activar(15, 3)
 
         if self.boss.aparecido:
             self.boss.mover()
-            if self.boss.puede_disparar():
-                self.balas_enemigas.extend(self.boss.disparar())
+            self.hb_boss.actualizar(self.boss.vida, self.boss.max_vida)
+            tipo_disparo = self.boss.puede_disparar()
+            if tipo_disparo:
+                self.balas_enemigas.extend(self.boss.disparar(tipo_disparo))
+
+        self.hb_jugador.actualizar(self.nave.vida, self.nave.max_vida)
+
+        # Mover balas y manejar granadas
+        balas_a_fragmentar = []
+        for b in self.balas_enemigas:
+            if isinstance(b, BalaGranada):
+                if b.mover(): # Retorna True si explota
+                    balas_a_fragmentar.append(b)
+            else:
+                b.mover()
+        
+        # Procesar explosiones de granadas
+        for bg in balas_a_fragmentar:
+            self.particle_manager.crear_explosion(bg.x, bg.y, color=NES_ORANGE, cantidad=50)
+            self.shake.activar(15, 6)
+            # Generar fragmentos en todas las direcciones (Círculo completo)
+            for angulo in range(0, 360, 20):
+                rad = math.radians(angulo)
+                self.balas_enemigas.append(Bala(bg.x, bg.y, vx=math.cos(rad)*5, vy=math.sin(rad)*5, color=NES_YELLOW))
+            if bg in self.balas_enemigas: self.balas_enemigas.remove(bg)
 
         for b in self.balas_jugador: b.mover()
-        for b in self.balas_enemigas: b.mover()
         for p in self.powerups: p.mover()
 
         self.particle_manager.actualizar()
         self.resolver_colisiones()
 
     def resolver_colisiones(self):
-        # Balas Jugador -> Enemigos/Boss
         balas_j_eliminar = []
         for b in self.balas_jugador:
             if self.boss.aparecido and b.obtener_rect().colliderect(self.boss.obtener_rect()):
@@ -174,7 +200,7 @@ class BaseLevelScene:
                 if b.obtener_rect().colliderect(e.obtener_rect()):
                     self.particle_manager.crear_explosion(e.x + e.ancho//2, e.y + e.alto//2, cantidad=20)
                     AudioManager.play_explosion()
-                    if self.nivel == 3 and random.random() < 0.10: # Powerups solo en nivel 3 por ahora
+                    if self.nivel == 3 and random.random() < 0.10:
                         self.powerups.append(PowerUp(e.x, e.y))
                     self.enemy_manager.enemigos.remove(e)
                     self.enemigos_derrotados += 1
@@ -182,7 +208,6 @@ class BaseLevelScene:
                     break
         self.balas_jugador = [b for b in self.balas_jugador if b not in balas_j_eliminar and -10 < b.y < 610]
 
-        # Balas Enemigas -> Nave
         balas_e_eliminar = []
         nave_rect = self.nave.obtener_rect()
         dano_bala = 5 if self.nivel == 1 else (8 if self.nivel == 2 else 10)
@@ -190,23 +215,23 @@ class BaseLevelScene:
             if b.obtener_rect().colliderect(nave_rect):
                 self.nave.recibir_dano(dano_bala)
                 self.dano_recibido_total += dano_bala
+                self.shake.activar(10, 4)
                 self.particle_manager.crear_explosion(b.x, b.y, color=NES_LIGHT_BLUE, cantidad=10)
                 AudioManager.play_explosion()
                 balas_e_eliminar.append(b)
         self.balas_enemigas = [b for b in self.balas_enemigas if b not in balas_e_eliminar and -50 < b.y < 650 and -50 < b.x < 850]
 
-        # Nave -> Enemigos (Choque)
         dano_choque = 20 if self.nivel == 1 else 25
         for e in self.enemy_manager.enemigos[:]:
             if nave_rect.colliderect(e.obtener_rect()):
                 self.nave.recibir_dano(dano_choque)
                 self.dano_recibido_total += dano_choque
+                self.shake.activar(15, 6)
                 self.particle_manager.crear_explosion(e.x + e.ancho//2, e.y + e.alto//2, cantidad=30)
                 AudioManager.play_explosion()
                 self.enemy_manager.enemigos.remove(e)
                 self.enemigos_derrotados += 1
 
-        # Nave -> Powerups
         for p in self.powerups[:]:
             if nave_rect.colliderect(p.obtener_rect()):
                 self.nave.powerup_escopeta = True
@@ -217,26 +242,31 @@ class BaseLevelScene:
     def dibujar(self, pantalla):
         if self.pausa: self.mostrar_menu_pausa(pantalla); return
 
-        pantalla.fill(NES_BLACK)
-        self.parallax.dibujar(pantalla)
+        temp_surf = pygame.Surface((self.ancho_pantalla, self.alto_pantalla))
+        temp_surf.fill(NES_BLACK)
         
-        self.dibujar_ui(pantalla)
-        self.nave.dibujar(pantalla)
-        self.enemy_manager.dibujar(pantalla)
-        self.boss.dibujar(pantalla)
+        self.parallax.dibujar(temp_surf)
+        self.dibujar_ui(temp_surf)
+        self.nave.dibujar(temp_surf)
+        self.enemy_manager.dibujar(temp_surf)
+        self.boss.dibujar(temp_surf)
 
-        for b in self.balas_jugador: b.dibujar(pantalla)
-        for b in self.balas_enemigas: b.dibujar(pantalla)
-        for p in self.powerups: p.dibujar(pantalla)
+        for b in self.balas_jugador: b.dibujar(temp_surf)
+        for b in self.balas_enemigas: b.dibujar(temp_surf)
+        for p in self.powerups: p.dibujar(temp_surf)
 
-        self.particle_manager.dibujar(pantalla)
+        self.particle_manager.dibujar(temp_surf)
 
-        if self.victoria: self.mostrar_victoria(pantalla)
-        if self.game_over: self.mostrar_game_over(pantalla)
+        if self.victoria: self.mostrar_victoria(temp_surf)
+        if self.game_over: self.mostrar_game_over(temp_surf)
+        
+        self.shake.aplicar(temp_surf)
+        pantalla.blit(temp_surf, (0, 0))
 
     def dibujar_ui(self, pantalla):
         pantalla.blit(self.font_pquena.render(f"HP: {self.nave.vida}", True, NES_WHITE), (20, 20))
-        self.dibujar_barra_vida(pantalla, 20, 45, 200, 15, self.nave.vida, self.nave.max_vida, NES_RED)
+        self.hb_jugador.dibujar(pantalla)
+        
         pantalla.blit(self.font_pquena.render(f"OLEADA: {self.enemy_manager.oleada_actual}/{self.meta_oleadas}", True, NES_WHITE), (620, 20))
         
         if self.nave.powerup_escopeta:
@@ -246,7 +276,7 @@ class BaseLevelScene:
         if self.boss.aparecido:
             texto_boss = "JEFE MAESTRO" if self.nivel == 1 else (f"SUPER JEFE NIVEL {self.nivel}")
             pantalla.blit(self.font_pquena.render(texto_boss, True, NES_RED), (self.centro_x - 100, 20))
-            self.dibujar_barra_vida(pantalla, self.centro_x - 150, 45, 300, 20, self.boss.vida, self.boss.max_vida, NES_ORANGE)
+            self.hb_boss.dibujar(pantalla)
 
     def mostrar_menu_pausa(self, pantalla):
         overlay = pygame.Surface((self.ancho_pantalla, self.alto_pantalla), pygame.SRCALPHA)
@@ -280,7 +310,6 @@ class BaseLevelScene:
         t = self.titulo_font.render(txt_victoria, True, NES_GREEN)
         pantalla.blit(t, t.get_rect(center=(self.centro_x, self.centro_y - 120)))
         
-        # Mostrar estadísticas y medalla
         tiempo_total = (pygame.time.get_ticks() - self.tiempo_inicio) // 1000
         from engine.progreso_manager import registrar_logro
         medalla = registrar_logro(self.nivel, tiempo_total, self.dano_recibido_total)
@@ -295,16 +324,15 @@ class BaseLevelScene:
         
         self.dibujar_boton(pantalla, "CONTINUAR", self.centro_y + 100)
 
-    # Métodos abstractos/sobrescribibles
     def volver_al_menu(self):
         from engine.scene_manager import SceneManager; from scenes.select_level import SelectLevelScene
         SceneManager.cambiar_escena(SelectLevelScene(self.nombre))
 
     def reiniciar_nivel(self):
-        pass # Sobrescribir en subclase
+        pass
 
     def finalizar_nivel(self):
-        pass # Sobrescribir en subclase
+        pass
 
     def completar_nivel_logica(self):
-        pass # Sobrescribir en subclase
+        pass

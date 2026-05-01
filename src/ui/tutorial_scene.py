@@ -47,12 +47,16 @@ class InteractiveTutorialScene(BaseLevelScene):
         if self.pausa or self.victoria or self.game_over: return
 
         self.parallax.actualizar()
+        self.shake.actualizar() # Añadir actualización de sacudida
         
         # Bug 1 Fix: Bloqueo de movimiento hasta el paso 1
         if self.paso_actual >= 1:
             self.nave.mover(pygame.key.get_pressed())
             
         self.particle_manager.actualizar()
+        
+        # Actualizar barra de vida animada
+        self.hb_jugador.actualizar(self.nave.vida, self.nave.max_vida)
         
         # Lógica de pasos del tutorial
         self.actualizar_logica_tutorial()
@@ -187,8 +191,8 @@ class InteractiveTutorialScene(BaseLevelScene):
         # Dibujar Nave al final para que siempre esté sobre todo lo demás
         self.nave.dibujar(pantalla)
         
-        # Dibujar UI de Vida
-        self.dibujar_barra_vida(pantalla, 20, 45, 200, 15, self.nave.vida, self.nave.max_vida, NES_RED)
+        # Dibujar UI de Vida (Nueva sistema)
+        self.hb_jugador.dibujar(pantalla)
 
         if self.pausa: self.mostrar_menu_pausa(pantalla)
         if self.victoria: self.mostrar_victoria(pantalla)

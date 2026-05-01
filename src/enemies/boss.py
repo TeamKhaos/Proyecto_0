@@ -1,38 +1,51 @@
 import pygame
 import math
 import random
-from enemies.bala import Bala
-from assets.colors import NES_RED, NES_ORANGE, NES_YELLOW
+from enemies.bala import Bala, BalaGranada
+from assets.colors import NES_RED, NES_ORANGE, NES_YELLOW, NES_WHITE
+from engine.asset_manager import AssetManager
 
 class Boss:
-    def __init__(self, target=None):
+    def __init__(self, target=None, tint_color=None, nivel=1):
         self.x = 300
-        self.y = -200
+        self.y = -250
         self.velocidad = 1
         self.vida = 100
         self.max_vida = 100
         self.aparecido = False
+        self.entrada_completa = False 
         self.derrotado = False
         self.target = target
+        self.tint_color = tint_color
+        self.nivel = nivel # Identificar el nivel para la IA
         
-        # --- Movimiento Lateral ---
+        # --- Movimiento ---
         self.direccion_x = 1
-        self.velocidad_x = 2
+        self.velocidad_x = 2 if nivel == 1 else 4
+        self.timer_movimiento = 0
         
         # --- Disparo ---
         self.shoot_timer = 0
         self.shoot_delay = 60 
         self.ancho = 200
         self.alto = 200
-        self.patron_actual = 0 # 0: Fan, 1: Spiral, 2: Targeted
+        self.patron_actual = 0 
         self.angulo_espiral = 0
+        
+        # Especial Nivel 2
+        self.timer_granada = 0
+        self.delay_granada = 180 # Cada 3 segundos aprox
 
         self.frames = []
         try:
             for i in range(4):
-                frame = pygame.image.load(f"assets/images/enemies/boss{i}.png").convert_alpha()
-                frame = pygame.transform.scale(frame, (200, 200))
-                self.frames.append(frame)
+                img = AssetManager.get_image(f"assets/images/enemies/boss{i}.png", (200, 200))
+                if self.tint_color:
+                    img_tintada = img.copy()
+                    img_tintada.fill((*self.tint_color, 255), special_flags=pygame.BLEND_RGBA_MULT)
+                    self.frames.append(img_tintada)
+                else:
+                    self.frames.append(img)
         except:
             self.frames = [None]
 
@@ -55,66 +68,110 @@ class Boss:
         self.aparecido = True
 
     def mover(self):
-        if not self.aparecido: return
+        if not self.aparecido: 
+            return
 
-        # Entrada inicial
-        if self.y < 80:
+        # Fase de entrada (Solo ocurre una vez)
+        if not self.entrada_completa:
             self.y += self.velocidad
-        else:
-            # Movimiento lateral
+            if self.y >= 50:
+                self.y = 50
+                self.entrada_completa = True
+            return
+
+        # Lógica de movimiento principal
+        porcentaje_vida = self.vida / self.max_vida
+        self.timer_movimiento += 1
+
+        if porcentaje_vida > 0.7:
+            # Fase 1: Rebote lateral + Oscilación vertical
             self.x += self.velocidad_x * self.direccion_x
-            if self.x <= 50 or self.x >= 550:
-                self.direccion_x *= -1
+            if self.x >= 800 - self.ancho:
+                self.x = 800 - self.ancho
+                self.direccion_x = -1
+            elif self.x <= 0:
+                self.x = 0
+                self.direccion_x = 1
+            
+            # Aquí self.y puede bajar de 50 sin reactivar la entrada
+            self.y = 50 + math.sin(self.timer_movimiento * 0.05) * 20
+        
+        elif porcentaje_vida > 0.3:
+            # Fase 2: Infinito (8)
+            t = self.timer_movimiento * 0.03
+            self.x = 400 - (self.ancho // 2) + math.sin(t) * 250
+            self.y = 70 + math.cos(t * 2) * 50
+        
+        else:
+            # Fase 3: Persecución Agresiva
+            if self.target:
+                centro_boss = self.x + self.ancho // 2
+                centro_player = self.target.x + self.target.ancho // 2
+                distancia = centro_player - centro_boss
+                self.x += distancia * 0.05
+            
+            self.x = max(0, min(800 - self.ancho, self.x))
+            self.y = 60 + math.sin(self.timer_movimiento * 0.1) * 15
 
     def puede_disparar(self):
-        if not self.aparecido or self.y < 80: return False
+        if not self.aparecido or self.y < 50: return False
         self.shoot_timer += 1
         
-        # Cambiar patrón según la vida
-        if self.vida > 70: self.patron_actual = 0
-        elif self.vida > 40: self.patron_actual = 1
-        else: self.patron_actual = 2
+        porcentaje_vida = self.vida / self.max_vida
+        
+        # Lógica de Granada (Nivel 2) - FORZADO AL INICIO PARA TEST
+        if self.nivel == 2:
+            self.timer_granada += 1
+            # Forzar primer disparo casi inmediato (frame 30)
+            if self.timer_granada == 30 or self.timer_granada >= self.delay_granada:
+                print(f"[BOSS DEBUG] ¡LANZANDO GRANADA! Timer: {self.timer_granada}")
+                self.timer_granada = 0
+                return "GRANADA"
+
+        if porcentaje_vida > 0.7: self.patron_actual = 0
+        elif porcentaje_vida > 0.4: self.patron_actual = 1
+        else: self.patron_actual = 2 if random.random() > 0.3 else 3
 
         current_delay = self.shoot_delay
-        if self.patron_actual == 1: current_delay = 15 # Espiral dispara rápido
-        if self.patron_actual == 2: current_delay = 45 # Targeted
+        if self.patron_actual == 1: current_delay = 12 
+        if self.patron_actual == 3: current_delay = 5 
             
         if self.shoot_timer >= current_delay:
+            print(f"[BOSS DEBUG] Disparo normal. Patron: {self.patron_actual}")
             self.shoot_timer = 0
             return True
         return False
 
-    def disparar(self):
+    def disparar(self, tipo=None):
         balas = []
         cx, cy = self.x + 100, self.y + 180
         
-        if self.patron_actual == 0: # Fan
-            for angulo in range(-30, 31, 15):
+        if tipo == "GRANADA":
+            balas.append(BalaGranada(cx, cy, velocidad=6, color=NES_ORANGE))
+            return balas
+
+        if self.patron_actual == 0: # Fan (Abanico)
+            for angulo in range(-45, 46, 15):
                 rad = math.radians(angulo + 90)
-                vx = math.cos(rad) * 4
-                vy = math.sin(rad) * 4
-                balas.append(Bala(cx, cy, vx=vx, vy=vy, color=NES_RED))
+                balas.append(Bala(cx, cy, vx=math.cos(rad)*4, vy=math.sin(rad)*4, color=NES_RED))
         
-        elif self.patron_actual == 1: # Spiral
+        elif self.patron_actual == 1: # Spiral (Espiral)
             rad = math.radians(self.angulo_espiral)
-            vx = math.cos(rad) * 5
-            vy = math.sin(rad) * 5
-            balas.append(Bala(cx, cy, vx=vx, vy=vy, color=NES_ORANGE))
+            balas.append(Bala(cx, cy, vx=math.cos(rad)*5, vy=math.sin(rad)*5, color=NES_ORANGE))
             self.angulo_espiral += 25
-            if self.angulo_espiral >= 360: self.angulo_espiral = 0
             
-        elif self.patron_actual == 2: # Targeted
+        elif self.patron_actual == 2: # Targeted (Dirigido)
             if self.target:
                 tx, ty = self.target.x + 32, self.target.y + 32
-                dist_x = tx - cx
-                dist_y = ty - cy
-                magnitud = math.sqrt(dist_x**2 + dist_y**2)
-                if magnitud > 0:
-                    vx = (dist_x / magnitud) * 6
-                    vy = (dist_y / magnitud) * 6
-                    balas.append(Bala(cx, cy, vx=vx, vy=vy, color=NES_YELLOW))
-            else:
-                balas.append(Bala(cx, cy, velocidad=6, direccion=1, color=NES_YELLOW))
+                dx, dy = tx - cx, ty - cy
+                mag = math.sqrt(dx**2 + dy**2)
+                if mag > 0:
+                    balas.append(Bala(cx, cy, vx=(dx/mag)*7, vy=(dy/mag)*7, color=NES_YELLOW))
+        
+        elif self.patron_actual == 3: # Chaos (Lluvia aleatoria)
+            vx = random.uniform(-3, 3)
+            vy = random.uniform(4, 8)
+            balas.append(Bala(cx, cy, vx=vx, vy=vy, color=NES_WHITE))
                 
         return balas
 
