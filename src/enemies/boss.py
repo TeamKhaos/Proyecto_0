@@ -119,12 +119,10 @@ class Boss:
         
         porcentaje_vida = self.vida / self.max_vida
         
-        # Lógica de Granada (Nivel 2) - FORZADO AL INICIO PARA TEST
+        # Lógica de Granada (Nivel 2)
         if self.nivel == 2:
             self.timer_granada += 1
-            # Forzar primer disparo casi inmediato (frame 30)
-            if self.timer_granada == 30 or self.timer_granada >= self.delay_granada:
-                print(f"[BOSS DEBUG] ¡LANZANDO GRANADA! Timer: {self.timer_granada}")
+            if self.timer_granada >= self.delay_granada:
                 self.timer_granada = 0
                 return "GRANADA"
 
@@ -137,7 +135,6 @@ class Boss:
         if self.patron_actual == 3: current_delay = 5 
             
         if self.shoot_timer >= current_delay:
-            print(f"[BOSS DEBUG] Disparo normal. Patron: {self.patron_actual}")
             self.shoot_timer = 0
             return True
         return False

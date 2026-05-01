@@ -19,7 +19,7 @@ class CreditsScene:
             (f"PILOTO: {self.nombre.upper()}", self.fuente_texto, NES_GREEN),
             ("", self.fuente_texto, NES_WHITE),
             ("DISEÑO Y PROGRAMACIÓN", self.fuente_pquena, NES_LIGHT_BLUE),
-            ("GEMINI CLI AGENT", self.fuente_texto, NES_WHITE),
+            ("GsT", self.fuente_texto, NES_WHITE),
             ("", self.fuente_texto, NES_WHITE),
             ("ARTE RETRO", self.fuente_pquena, NES_LIGHT_BLUE),
             ("ESTILO NES 8-BIT", self.fuente_texto, NES_WHITE),
