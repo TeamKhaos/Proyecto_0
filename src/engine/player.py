@@ -33,6 +33,10 @@ class Nave:
             img_path = f"{base_path}{i}.png"
             img = AssetManager.get_image(img_path, (self.ancho, self.alto))
             self.frames.append(img)
+            
+        # Superficie reutilizable para efectos (Optimización)
+        self.temp_surf = pygame.Surface((self.ancho, self.alto), pygame.SRCALPHA)
+        self.teclas_estado = {"W": False, "S": False, "A": False, "D": False}
 
     def recibir_dano(self, cantidad):
         self.vida -= cantidad
@@ -41,11 +45,19 @@ class Nave:
     def mover(self, teclas):
         moviendose = False
         old_x, old_y = self.x, self.y
+        
+        # Almacenar estado de teclas para feedback visual (Optimización de acceso)
+        self.teclas_estado = {
+            "W": teclas[pygame.K_w],
+            "S": teclas[pygame.K_s],
+            "A": teclas[pygame.K_a],
+            "D": teclas[pygame.K_d]
+        }
 
-        if teclas[pygame.K_w] and self.y > 0: self.y -= self.velocidad; moviendose = True
-        if teclas[pygame.K_s] and self.y < 600 - self.alto: self.y += self.velocidad; moviendose = True
-        if teclas[pygame.K_a] and self.x > 0: self.x -= self.velocidad; moviendose = True
-        if teclas[pygame.K_d] and self.x < 800 - self.ancho: self.x += self.velocidad; moviendose = True
+        if self.teclas_estado["W"] and self.y > 0: self.y -= self.velocidad; moviendose = True
+        if self.teclas_estado["S"] and self.y < 600 - self.alto: self.y += self.velocidad; moviendose = True
+        if self.teclas_estado["A"] and self.x > 0: self.x -= self.velocidad; moviendose = True
+        if self.teclas_estado["D"] and self.x < 800 - self.ancho: self.x += self.velocidad; moviendose = True
         
         # Lógica de estelas (Ghosts)
         if moviendose:
@@ -77,8 +89,9 @@ class Nave:
             alpha = 150 - (i * 30)
             if alpha < 0: alpha = 0
             
-            # Crear superficie para el ghost con efecto de color
-            ghost_surf = self.frames[gframe].copy()
+            # Reutilizar superficie para el ghost (Optimización)
+            self.temp_surf.fill((0, 0, 0, 0))
+            self.temp_surf.blit(self.frames[gframe], (0, 0))
             
             # Efecto RGB: Ciclo de colores basado en el tiempo
             hue = (self.contador_rgb + i * 20) % 360
@@ -86,16 +99,17 @@ class Nave:
             color.hsva = (hue, 80, 100, 100)
             
             # Aplicar color al ghost
-            ghost_surf.fill((color.r, color.g, color.b, alpha), special_flags=pygame.BLEND_RGBA_MULT)
-            pantalla.blit(ghost_surf, (gx, gy))
+            self.temp_surf.fill((color.r, color.g, color.b, alpha), special_flags=pygame.BLEND_RGBA_MULT)
+            pantalla.blit(self.temp_surf, (gx, gy))
 
         # 2. Dibujar Nave Principal
         frame_idx = self.obtener_frame_actual()
         
         if self.powerup_escopeta and (pygame.time.get_ticks() // 100) % 2 == 0:
-            s = self.frames[frame_idx].copy()
-            s.fill((0, 255, 0, 100), special_flags=pygame.BLEND_RGBA_MULT)
-            pantalla.blit(s, (self.x, self.y))
+            self.temp_surf.fill((0, 0, 0, 0))
+            self.temp_surf.blit(self.frames[frame_idx], (0, 0))
+            self.temp_surf.fill((0, 255, 0, 100), special_flags=pygame.BLEND_RGBA_MULT)
+            pantalla.blit(self.temp_surf, (self.x, self.y))
         else:
             pantalla.blit(self.frames[frame_idx], (self.x, self.y))
 

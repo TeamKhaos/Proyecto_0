@@ -55,6 +55,15 @@ class BaseLevelScene:
         self.parallax = ParallaxManager(self.ancho_pantalla, self.alto_pantalla, bg_esquema)
         self.particle_manager = ParticleManager()
         
+        # Superficie persistente para evitar recreación (Optimización)
+        self.surface_juego = pygame.Surface((self.ancho_pantalla, self.alto_pantalla))
+        self.overlay_pausa = pygame.Surface((self.ancho_pantalla, self.alto_pantalla), pygame.SRCALPHA)
+        self.overlay_pausa.fill((0, 0, 0, 180))
+        self.overlay_gameover = pygame.Surface((self.ancho_pantalla, self.alto_pantalla), pygame.SRCALPHA)
+        self.overlay_gameover.fill((50, 0, 0, 200))
+        self.overlay_victoria = pygame.Surface((self.ancho_pantalla, self.alto_pantalla), pygame.SRCALPHA)
+        self.overlay_victoria.fill((0, 0, 0, 200))
+        
         # Estadísticas para Logros
         self.tiempo_inicio = pygame.time.get_ticks()
         self.dano_recibido_total = 0
@@ -242,26 +251,26 @@ class BaseLevelScene:
     def dibujar(self, pantalla):
         if self.pausa: self.mostrar_menu_pausa(pantalla); return
 
-        temp_surf = pygame.Surface((self.ancho_pantalla, self.alto_pantalla))
-        temp_surf.fill(NES_BLACK)
+        self.surface_juego.fill(NES_BLACK)
         
-        self.parallax.dibujar(temp_surf)
-        self.dibujar_ui(temp_surf)
-        self.nave.dibujar(temp_surf)
-        self.enemy_manager.dibujar(temp_surf)
-        self.boss.dibujar(temp_surf)
+        self.parallax.dibujar(self.surface_juego)
+        self.dibujar_ui(self.surface_juego)
+        self.nave.dibujar(self.surface_juego)
+        self.enemy_manager.dibujar(self.surface_juego)
+        self.boss.dibujar(self.surface_juego)
 
-        for b in self.balas_jugador: b.dibujar(temp_surf)
-        for b in self.balas_enemigas: b.dibujar(temp_surf)
-        for p in self.powerups: p.dibujar(temp_surf)
+        for b in self.balas_jugador: b.dibujar(self.surface_juego)
+        for b in self.balas_enemigas: b.dibujar(self.surface_juego)
+        for p in self.powerups: p.dibujar(self.surface_juego)
 
-        self.particle_manager.dibujar(temp_surf)
+        self.particle_manager.dibujar(self.surface_juego)
 
-        if self.victoria: self.mostrar_victoria(temp_surf)
-        if self.game_over: self.mostrar_game_over(temp_surf)
+        if self.victoria: self.mostrar_victoria(self.surface_juego)
+        if self.game_over: self.mostrar_game_over(self.surface_juego)
         
-        self.shake.aplicar(temp_surf)
-        pantalla.blit(temp_surf, (0, 0))
+        # Aplicar Shake al hacer blit a la pantalla real (Optimizado)
+        offset = self.shake.get_offset()
+        pantalla.blit(self.surface_juego, offset)
 
     def dibujar_ui(self, pantalla):
         pantalla.blit(self.font_pquena.render(f"HP: {self.nave.vida}", True, NES_WHITE), (20, 20))
@@ -279,8 +288,7 @@ class BaseLevelScene:
             self.hb_boss.dibujar(pantalla)
 
     def mostrar_menu_pausa(self, pantalla):
-        overlay = pygame.Surface((self.ancho_pantalla, self.alto_pantalla), pygame.SRCALPHA)
-        overlay.fill((0, 0, 0, 180)); pantalla.blit(overlay, (0, 0))
+        pantalla.blit(self.overlay_pausa, (0, 0))
         pausa_texto = self.font.render(f"PAUSA - NIVEL {self.nivel}", True, NES_RED)
         pantalla.blit(pausa_texto, pausa_texto.get_rect(center=(self.centro_x, self.centro_y - 100)))
         self.dibujar_boton(pantalla, "JUGAR", self.centro_y - 20)
@@ -296,16 +304,14 @@ class BaseLevelScene:
         pantalla.blit(t, t.get_rect(center=rect.center))
 
     def mostrar_game_over(self, pantalla):
-        overlay = pygame.Surface((self.ancho_pantalla, self.alto_pantalla), pygame.SRCALPHA)
-        overlay.fill((50, 0, 0, 200)); pantalla.blit(overlay, (0, 0))
+        pantalla.blit(self.overlay_gameover, (0, 0))
         t = self.titulo_font.render("GAME OVER", True, NES_RED)
         pantalla.blit(t, t.get_rect(center=(self.centro_x, self.centro_y - 100)))
         self.dibujar_boton(pantalla, "REINTENTAR", self.centro_y)
         self.dibujar_boton(pantalla, "VOLVER AL MENU", self.centro_y + 80)
 
     def mostrar_victoria(self, pantalla):
-        overlay = pygame.Surface((self.ancho_pantalla, self.alto_pantalla), pygame.SRCALPHA)
-        overlay.fill((0, 0, 0, 200)); pantalla.blit(overlay, (0, 0))
+        pantalla.blit(self.overlay_victoria, (0, 0))
         txt_victoria = "¡VICTORIA!" if self.nivel == 1 else f"¡NIVEL {self.nivel} COMPLETADO!"
         t = self.titulo_font.render(txt_victoria, True, NES_GREEN)
         pantalla.blit(t, t.get_rect(center=(self.centro_x, self.centro_y - 120)))

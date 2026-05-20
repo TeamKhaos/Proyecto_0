@@ -11,6 +11,9 @@ class InteractiveTutorialScene(BaseLevelScene):
         super().__init__(nombre_jugador, nivel=0, meta_oleadas=1, bg_esquema="default")
         
         # Sobrescribir variables específicas del tutorial
+        self.nave.x = self.centro_x - self.nave.ancho // 2
+        self.nave.y = 300
+        
         self.paso_actual = 0
         self.timer_texto = 0
         self.mensajes = [
@@ -18,12 +21,22 @@ class InteractiveTutorialScene(BaseLevelScene):
             "USA 'WASD' PARA MOVER TU NAVE POR LA PANTALLA.",
             "¡MUY BIEN! AHORA INTENTA DISPARAR CON LA TECLA 'J'.",
             "UN ENEMIGO HA APARECIDO. ¡DESTRÚYELO!",
-            "¡EXCELENTE! LOS ENEMIGOS TAMBIÉN DISPARAN. ¡ESQUIVA!",
-            "EL JEFE APARECERÁ CUANDO COMPLETES LAS OLEADAS.",
-            "¡ESTÁS LISTO PARA LA BATALLA! PULSA 'CONTINUAR'."
+            "ERROR: Pygame.Surface_Lock(ID:0x666) FAILED.",
+            "FATAL: RECURSION_LIMIT_EXCEEDED in 'StarRogue.py'",
+            "CRITICAL: Memory leak at 0xAA00BB - EXIT NOW.",
+            "¡SISTEMA REESTABLECIDO! PULSA 'CONTINUAR'."
         ]
         
-        # Deshabilitar spawns automáticos de EnemyManager
+        # Nuevos mensajes sospechosos (Color Rojo)
+        self.mensajes_creepys = {
+            4: "AttributeError: 'Player' is already dead.",
+            5: "OSError: [Errno 13] Access to reality denied.",
+            6: "RuntimeError: Unable to locate USER_SOUL.DLL"
+        }
+        
+        # Caracteres para el efecto de glitch
+        self.glitch_chars = "!@#$%^&*()_+-=[]{}|;:,.<>?/0123456789"
+        self.timer_decodificacion = 0
         self.enemy_manager.oleada_actual = 0
         self.enemy_manager.enemigos = []
         self.meta_oleadas = "TUTORIAL"
@@ -36,6 +49,10 @@ class InteractiveTutorialScene(BaseLevelScene):
         
         # Para el paso de esquiva
         self.bala_tutorial = None
+        
+        # --- Variables de Glitch ---
+        self.glitch_fuerza = 0
+        self.invertir_colores = False
 
     def configurar_boss(self):
         # En el tutorial no hay boss real a menos que queramos mostrarlo
@@ -47,8 +64,18 @@ class InteractiveTutorialScene(BaseLevelScene):
         if self.pausa or self.victoria or self.game_over: return
 
         self.parallax.actualizar()
-        self.shake.actualizar() # Añadir actualización de sacudida
+        self.shake.actualizar() 
         
+        # --- LÓGICA DE CORRUPCIÓN (Fase 12) ---
+        if self.paso_actual >= 4:
+            self.glitch_fuerza = (self.paso_actual - 3) * 6
+            # Sacudida aleatoria constante
+            if random.random() < 0.1:
+                self.shake.activar(5, self.glitch_fuerza)
+            
+            # Inversión de colores ráfaga
+            self.invertir_colores = random.random() < 0.05 * (self.paso_actual - 3)
+
         # Bug 1 Fix: Bloqueo de movimiento hasta el paso 1
         if self.paso_actual >= 1:
             self.nave.mover(pygame.key.get_pressed())
@@ -168,35 +195,72 @@ class InteractiveTutorialScene(BaseLevelScene):
             self.disparo_probado = True
 
     def dibujar(self, pantalla):
-        # Dibujamos todo lo de la base
-        pantalla.fill(NES_BLACK)
-        self.parallax.dibujar(pantalla)
+        if self.pausa: self.mostrar_menu_pausa(pantalla); return
+
+        self.surface_juego.fill(NES_BLACK)
+        self.parallax.dibujar(self.surface_juego)
         
-        for e in self.enemy_manager.enemigos: e.dibujar(pantalla)
-        for b in self.balas_jugador: b.dibujar(pantalla)
-        for b in self.balas_enemigas: b.dibujar(pantalla)
-        self.particle_manager.dibujar(pantalla)
+        for e in self.enemy_manager.enemigos: e.dibujar(self.surface_juego)
+        for b in self.balas_jugador: b.dibujar(self.surface_juego)
+        for b in self.balas_enemigas: b.dibujar(self.surface_juego)
+        self.particle_manager.dibujar(self.surface_juego)
         
         # --- CAJA DE TEXTO DEL TUTORIAL ---
-        # Bug 1 Fix: Dibujar la caja ANTES que la nave para que la nave pueda estar "encima"
         if self.paso_actual < len(self.mensajes):
             txt_box = pygame.Rect(50, 480, 700, 80)
-            pygame.draw.rect(pantalla, (0, 0, 50, 200), txt_box, border_radius=10)
-            pygame.draw.rect(pantalla, NES_WHITE, txt_box, 2, border_radius=10)
+            pygame.draw.rect(self.surface_juego, (0, 0, 50, 200), txt_box, border_radius=10)
+            pygame.draw.rect(self.surface_juego, NES_WHITE, txt_box, 2, border_radius=10)
             
-            msg = self.mensajes[self.paso_actual]
-            txt_render = self.font_pquena.render(msg, True, NES_WHITE)
-            pantalla.blit(txt_render, txt_render.get_rect(center=txt_box.center))
+            # Lógica de mensajes normales vs creepys
+            msg_final = self.mensajes[self.paso_actual]
+            color_msg = NES_WHITE
+            
+            # Determinar si el mensaje es creepy
+            es_creepy = self.paso_actual in self.mensajes_creepys
+            if es_creepy:
+                msg_final = self.mensajes_creepys[self.paso_actual]
+                color_msg = NES_RED
+            
+            # --- EFECTO DE DECODIFICACIÓN (GLITCH TEXT) ---
+            if self.paso_actual >= 4:
+                char_list = list(msg_final)
+                for i in range(len(char_list)):
+                    # Probabilidad de glichear un caracter cada frame
+                    if random.random() < 0.1:
+                        char_list[i] = random.choice(self.glitch_chars)
+                msg_final = "".join(char_list)
+            
+            txt_render = self.font_pquena.render(msg_final, True, color_msg)
+            self.surface_juego.blit(txt_render, txt_render.get_rect(center=txt_box.center))
 
-        # Dibujar Nave al final para que siempre esté sobre todo lo demás
-        self.nave.dibujar(pantalla)
+        # Dibujar Nave y UI
+        self.nave.dibujar(self.surface_juego)
+        self.hb_jugador.dibujar(self.surface_juego)
         
-        # Dibujar UI de Vida (Nueva sistema)
-        self.hb_jugador.dibujar(pantalla)
+        # --- INDICADORES WASD (Nuevo Feedback Visual) ---
+        if self.paso_actual == 1: # Mostrar SOLO en el paso de movimiento
+            self.dibujar_controles_wasd(self.surface_juego)
 
-        if self.pausa: self.mostrar_menu_pausa(pantalla)
-        if self.victoria: self.mostrar_victoria(pantalla)
-        if self.game_over: self.mostrar_game_over(pantalla)
+        if self.victoria: self.mostrar_victoria(self.surface_juego)
+        if self.game_over: self.mostrar_game_over(self.surface_juego)
+        
+        # --- EFECTOS DE CORRUPCIÓN (GLITCH) ---
+        if self.invertir_colores:
+            # Efecto de inversión rápida (Fase 12)
+            self.surface_juego.blit(self.surface_juego, (0, 0), special_flags=pygame.BLEND_RGB_SUB)
+        
+        # Estática aleatoria (Líneas rojas y ruido)
+        if self.paso_actual >= 5 and random.random() < 0.15:
+            for _ in range(15):
+                rx = random.randint(0, 800)
+                ry = random.randint(0, 600)
+                rw = random.randint(20, 300)
+                rh = random.randint(1, 3)
+                pygame.draw.rect(self.surface_juego, NES_RED, (rx, ry, rw, rh))
+
+        # Aplicar Shake y Blit final
+        offset = self.shake.get_offset()
+        pantalla.blit(self.surface_juego, offset)
 
     def mostrar_victoria(self, pantalla):
         overlay = pygame.Surface((self.ancho_pantalla, self.alto_pantalla), pygame.SRCALPHA)
@@ -217,5 +281,34 @@ class InteractiveTutorialScene(BaseLevelScene):
 
     def finalizar_nivel(self):
         from engine.scene_manager import SceneManager
-        from scenes.select_level import SelectLevelScene
-        SceneManager.cambiar_escena(SelectLevelScene(self.nombre))
+        from scenes.level_1 import NivelUnoScene
+        SceneManager.cambiar_escena(NivelUnoScene(self.nombre))
+
+    def dibujar_controles_wasd(self, pantalla):
+        """Dibuja indicadores visuales de las teclas WASD que se iluminan al pulsar."""
+        base_x, base_y = self.centro_x - 60, 400
+        size = 40
+        gap = 5
+        
+        teclas = [
+            ("W", (base_x + size + gap, base_y)),
+            ("A", (base_x, base_y + size + gap)),
+            ("S", (base_x + size + gap, base_y + size + gap)),
+            ("D", (base_x + (size + gap) * 2, base_y + size + gap))
+        ]
+        
+        for tecla, pos in teclas:
+            rect = pygame.Rect(pos[0], pos[1], size, size)
+            esta_pulsada = self.nave.teclas_estado.get(tecla, False)
+            
+            # Color basado en el estado
+            color_fondo = NES_YELLOW if esta_pulsada else (40, 40, 40)
+            color_texto = NES_BLACK if esta_pulsada else NES_WHITE
+            
+            # Dibujar Tecla
+            pygame.draw.rect(pantalla, color_fondo, rect, border_radius=5)
+            pygame.draw.rect(pantalla, NES_WHITE, rect, 2, border_radius=5)
+            
+            # Dibujar Letra
+            t = self.font_pquena.render(tecla, True, color_texto)
+            pantalla.blit(t, t.get_rect(center=rect.center))

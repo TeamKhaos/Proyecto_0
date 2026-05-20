@@ -44,10 +44,8 @@ class PantallaPrincipalScene:
         self.espacio_entre_botones = 25
 
         self.botones = {
-            "iniciar": pygame.Rect(0, 0, self.boton_ancho, self.boton_alto),
-            "hangar": pygame.Rect(0, 0, self.boton_ancho, self.boton_alto),
-            "configuración": pygame.Rect(0, 0, self.boton_ancho, self.boton_alto),
-            "salir": pygame.Rect(0, 0, self.boton_ancho, self.boton_alto),
+            "JUGAR": pygame.Rect(0, 0, self.boton_ancho, self.boton_alto),
+            "SALIR": pygame.Rect(0, 0, self.boton_ancho, self.boton_alto),
         }
         
         # Botón de Tamaño de Pantalla (Esquina Superior Derecha)
@@ -56,8 +54,8 @@ class PantallaPrincipalScene:
         self._posicionar_botones()
 
     def _posicionar_botones(self):
-        # Ajustamos para que el menú empiece más abajo y tenga más aire
-        inicio_y = 250 
+        # Centrado vertical simple
+        inicio_y = 350 
 
         for i, rect in enumerate(self.botones.values()):
             rect.center = (self.centro_x, inicio_y + i * (self.boton_alto + self.espacio_entre_botones))
@@ -65,7 +63,6 @@ class PantallaPrincipalScene:
     def manejar_eventos(self, eventos, pantalla=None):
         # Comprobar si estamos en periodo de bloqueo
         if pygame.time.get_ticks() - self.tiempo_entrada < self.duracion_bloqueo:
-            # Consumir eventos de salida para que no se cierren pero ignorar los clics
             for event in eventos:
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -88,19 +85,13 @@ class PantallaPrincipalScene:
                     settings.toggle_fullscreen()
                     return
 
-                if self.botones["iniciar"].collidepoint(event.pos):
+                if self.botones["JUGAR"].collidepoint(event.pos):
                     AudioManager.play_boton()
-                    SceneManager.cambiar_escena(SelectLevelScene(self.nombre))
-                elif self.botones["hangar"].collidepoint(event.pos):
+                    # Inicia directamente en el Tutorial (Fase 12)
+                    from ui.tutorial_scene import InteractiveTutorialScene
+                    SceneManager.cambiar_escena(InteractiveTutorialScene(self.nombre))
+                elif self.botones["SALIR"].collidepoint(event.pos):
                     AudioManager.play_boton()
-                    from ui.hangar_scene import HangarScene
-                    SceneManager.cambiar_escena(HangarScene(self.nombre))
-                elif self.botones["configuración"].collidepoint(event.pos):
-                    AudioManager.play_boton()
-                    SceneManager.cambiar_escena(ConfigScene(self.nombre))
-                elif self.botones["salir"].collidepoint(event.pos):
-                    AudioManager.play_boton()
-                    pygame.time.delay(200) # Pequeño delay para que se escuche antes de cerrar
                     pygame.quit()
                     exit()
 

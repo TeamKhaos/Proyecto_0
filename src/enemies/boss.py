@@ -93,25 +93,35 @@ class Boss:
                 self.x = 0
                 self.direccion_x = 1
             
-            # Aquí self.y puede bajar de 50 sin reactivar la entrada
-            self.y = 50 + math.sin(self.timer_movimiento * 0.05) * 20
+            # Suavizado vertical incluso en fase 1
+            target_y = 50 + math.sin(self.timer_movimiento * 0.05) * 20
+            self.y += (target_y - self.y) * 0.1
         
         elif porcentaje_vida > 0.3:
             # Fase 2: Infinito (8)
             t = self.timer_movimiento * 0.03
-            self.x = 400 - (self.ancho // 2) + math.sin(t) * 250
-            self.y = 70 + math.cos(t * 2) * 50
+            target_x = 400 - (self.ancho // 2) + math.sin(t) * 250
+            target_y = 70 + math.cos(t * 2) * 50
+            
+            # Interpolación para transición suave (Dash hacia la nueva fase)
+            self.x += (target_x - self.x) * 0.06
+            self.y += (target_y - self.y) * 0.06
         
         else:
             # Fase 3: Persecución Agresiva
+            target_x = self.x
             if self.target:
                 centro_boss = self.x + self.ancho // 2
                 centro_player = self.target.x + self.target.ancho // 2
                 distancia = centro_player - centro_boss
-                self.x += distancia * 0.05
+                target_x += distancia
             
-            self.x = max(0, min(800 - self.ancho, self.x))
-            self.y = 60 + math.sin(self.timer_movimiento * 0.1) * 15
+            target_x = max(0, min(800 - self.ancho, target_x))
+            target_y = 60 + math.sin(self.timer_movimiento * 0.1) * 15
+            
+            # Movimiento fluido hacia el objetivo
+            self.x += (target_x - self.x) * 0.08
+            self.y += (target_y - self.y) * 0.08
 
     def puede_disparar(self):
         if not self.aparecido or self.y < 50: return False

@@ -8,17 +8,22 @@ class AssetManager:
 
     @classmethod
     def get_image(cls, path, scale=None):
-        if path not in cls._images:
-            if not os.path.exists(path):
-                print(f"Advertencia: No se encontró la imagen en {path}")
-                return None
-            img = pygame.image.load(path).convert_alpha()
-            cls._images[path] = img
+        key = (path, scale)
+        if key not in cls._images:
+            if path not in cls._images:
+                if not os.path.exists(path):
+                    print(f"Advertencia: No se encontró la imagen en {path}")
+                    return None
+                img = pygame.image.load(path).convert_alpha()
+                cls._images[path] = img
+            
+            if scale:
+                img = cls._images[path]
+                cls._images[key] = pygame.transform.scale(img, scale)
+            else:
+                cls._images[key] = cls._images[path]
         
-        img = cls._images[path]
-        if scale:
-            return pygame.transform.scale(img, scale)
-        return img
+        return cls._images[key]
 
     @classmethod
     def get_font(cls, path, size):

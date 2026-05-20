@@ -22,10 +22,12 @@ class ScreenShake:
             self.offset_y = 0
 
     def aplicar(self, pantalla_virtual):
-        if self.offset_x != 0 or self.offset_y != 0:
-            temp_surf = pantalla_virtual.copy()
-            pantalla_virtual.fill((0, 0, 0))
-            pantalla_virtual.blit(temp_surf, (self.offset_x, self.offset_y))
+        # Este método ya no es recomendado por ser lento. 
+        # Es mejor usar get_offset() al hacer el blit final.
+        pass
+
+    def get_offset(self):
+        return (self.offset_x, self.offset_y)
 
 class HealthBar:
     def __init__(self, x, y, ancho, alto, color_base):

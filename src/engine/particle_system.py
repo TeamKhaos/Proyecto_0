@@ -33,8 +33,11 @@ class Particle:
     def dibujar(self, pantalla):
         if self.tamano <= 0: return
         
-        # Simular transparencia mediante el color (mezclando con el fondo negro)
+        # Simular transparencia mediante el color (Optimizado para evitar cálculos complejos cada frame)
         factor = self.vida / self.vida_max
+        if factor > 1: factor = 1
+        elif factor < 0: factor = 0
+        
         c = (int(self.color[0]*factor), int(self.color[1]*factor), int(self.color[2]*factor))
         
         if self.tipo == "circle":
@@ -49,12 +52,16 @@ class ParticleManager:
     def crear_explosion(self, x, y, color=NES_WHITE, cantidad=20, tipo="circle"):
         """Crea una explosión mejorada."""
         colores_fuego = [NES_WHITE, NES_YELLOW, NES_ORANGE, NES_RED, NES_LIGHT_BLUE]
+        # Pre-extender la lista para evitar múltiples redimensionamientos
+        nuevas = []
         for _ in range(cantidad):
             c = random.choice(colores_fuego) if color == NES_WHITE else color
-            self.particulas.append(Particle(x, y, c, tipo=tipo))
+            nuevas.append(Particle(x, y, c, tipo=tipo))
+        self.particulas.extend(nuevas)
 
     def actualizar(self):
-        # Actualizar y filtrar partículas muertas
+        # Actualizar in-place cuando sea posible o usar filtro más rápido
+        # List comprehension es generalmente rápida en Python para esto
         self.particulas = [p for p in self.particulas if p.actualizar()]
 
     def dibujar(self, pantalla):
